@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Novel — Library Collection</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #07070d;
+            --text: rgba(255, 255, 255, .92);
+            --text-dim: rgba(255, 255, 255, .4);
+            --surface: rgba(255, 255, 255, .03);
+            --border: rgba(255, 255, 255, .06);
+            --violet: #8b5cf6;
+            --rose: #f43f5e;
+            --cyan: #06b6d4;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --blue: #3b82f6;
+            --pink: #ec4899;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ── AMBIENT ──────────────────────── */
+        .ambient {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0
+        }
+
+        .ambient div {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: .2;
+            animation: drift 30s ease-in-out infinite alternate
+        }
+
+        .a1 {
+            width: 45vw;
+            height: 45vw;
+            top: -10%;
+            left: -8%;
+            background: var(--violet)
+        }
+
+        .a2 {
+            width: 35vw;
+            height: 35vw;
+            bottom: -12%;
+            right: -5%;
+            background: var(--rose);
+            animation-delay: -10s
+        }
+
+        .a3 {
+            width: 30vw;
+            height: 30vw;
+            top: 45%;
+            left: 55%;
+            background: var(--cyan);
+            animation-delay: -18s
+        }
+
+        @keyframes drift {
+            0% {
+                transform: translate(0, 0) scale(1)
+            }
+
+            50% {
+                transform: translate(40px, -30px) scale(1.1)
+            }
+
+            100% {
+                transform: translate(-25px, 35px) scale(.95)
+            }
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem
+        }
+
+        /* ── HEADER ──────────────────────── */
+        .header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            animation: fadeUp .6s ease both;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        .header h1 span {
+            background: linear-gradient(135deg, var(--violet), var(--rose));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 1.5rem
+        }
+
+        .hstat {
+            text-align: right
+        }
+
+        .hstat-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace
+        }
+
+        .hstat-val.v1 {
+            color: var(--violet)
+        }
+
+        .hstat-val.v2 {
+            color: var(--cyan)
+        }
+
+        .hstat-val.v3 {
+            color: var(--emerald)
+        }
+
+        .hstat-label {
+            font-size: .7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: .08em
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* ── TOOLBAR ─────────────────────── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            animation: fadeUp .6s ease .1s both;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .6rem 1rem;
+            border-radius: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            transition: border-color .3s;
+        }
+
+        .search-box:focus-within {
+            border-color: rgba(139, 92, 246, .3)
+        }
+
+        .search-box svg {
+            width: 15px;
+            height: 15px;
+            stroke: var(--text-dim);
+            flex-shrink: 0
+        }
+
+        .search-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: .85rem;
+            font-family: inherit;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-dim)
+        }
+
+        .view-toggle {
+            display: flex;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .vt-btn {
+            padding: .55rem .85rem;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all .2s;
+            display: grid;
+            place-items: center;
+        }
+
+        .vt-btn.active {
+            background: rgba(139, 92, 246, .12);
+            color: var(--violet)
+        }
+
+        .vt-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2
+        }
+
+        .sort-dropdown {
+            padding: .55rem 1rem;
+            border-radius: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: .8rem;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right .75rem center;
+            padding-right: 2rem;
+        }
+
+        .sort-dropdown option {
+            background: #1a1a2e
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: .4rem;
+            flex-wrap: wrap
+        }
+
+        .fchip {
+            padding: .35rem .75rem;
+            border-radius: 8px;
+            font-size: .7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+            border: 1px solid transparent;
+            user-select: none;
+        }
+
+        .fchip.all {
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, .05)
+        }
+
+        .fchip.all.active {
+            background: rgba(255, 255, 255, .1);
+            color: var(--text)
+        }
+
+        .fchip.ready {
+            color: var(--emerald);
+            background: rgba(16, 185, 129, .08)
+        }
+
+        .fchip.ready.active {
+            background: rgba(16, 185, 129, .18);
+            border-color: rgba(16, 185, 129, .2)
+        }
+
+        .fchip.processing {
+            color: var(--amber);
+            background: rgba(245, 158, 11, .08)
+        }
+
+        .fchip.processing.active {
+            background: rgba(245, 158, 11, .18);
+            border-color: rgba(245, 158, 11, .2)
+        }
+
+        .fchip.failed {
+            color: var(--rose);
+            background: rgba(244, 63, 94, .08)
+        }
+
+        .fchip.failed.active {
+            background: rgba(244, 63, 94, .18);
+            border-color: rgba(244, 63, 94, .2)
+        }
+
+        /* ── BOOK GRID ───────────────────── */
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .book-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        /* ── BOOK CARD ───────────────────── */
+        .book-card {
+            border-radius: 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all .4s cubic-bezier(.4, 0, .2, 1);
+            animation: cardIn .5s ease both;
+            position: relative;
+        }
+
+        .book-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(255, 255, 255, .1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .3), 0 0 30px var(--card-glow, rgba(139, 92, 246, .06));
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(25px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .book-cover {
+            height: 260px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .book-cover-bg {
+            position: absolute;
+            inset: 0;
+            transition: transform .6s ease;
+        }
+
+        .book-card:hover .book-cover-bg {
+            transform: scale(1.08)
+        }
+
+        .cover-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, .7));
+        }
+
+        .cover-text {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .cover-text .book-title-display {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1.3;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, .5);
+        }
+
+        .cover-text .book-author-display {
+            font-size: .8rem;
+            color: rgba(255, 255, 255, .6);
+            margin-top: .3rem;
+            font-style: italic;
+        }
+
+        /* Status badge */
+        .status-badge {
+            position: absolute;
+            top: .75rem;
+            right: .75rem;
+            z-index: 2;
+            padding: .25rem .6rem;
+            border-radius: 6px;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            backdrop-filter: blur(8px);
+        }
+
+        .status-badge.ready {
+            background: rgba(16, 185, 129, .2);
+            color: var(--emerald);
+            border: 1px solid rgba(16, 185, 129, .2)
+        }
+
+        .status-badge.processing {
+            background: rgba(245, 158, 11, .2);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .2)
+        }
+
+        .status-badge.failed {
+            background: rgba(244, 63, 94, .2);
+            color: var(--rose);
+            border: 1px solid rgba(244, 63, 94, .2)
+        }
+
+        /* Processing animation */
+        .processing-ring {
+            position: absolute;
+            top: .65rem;
+            left: .75rem;
+            z-index: 2;
+            width: 24px;
+            height: 24px;
+        }
+
+        .processing-ring svg {
+            animation: spin 2s linear infinite
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .book-details {
+            padding: 1rem 1.15rem 1.15rem
+        }
+
+        .book-title {
+            font-weight: 700;
+            font-size: .9rem;
+            margin-bottom: .15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .book-author {
+            font-size: .78rem;
+            color: var(--text-dim);
+            margin-bottom: .75rem
+        }
+
+        .book-stats {
+            display: flex;
+            gap: .6rem;
+        }
+
+        .bstat {
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+            font-size: .7rem;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .bstat svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2
+        }
+
+        .book-vibe {
+            margin-top: .6rem;
+            display: flex;
+            gap: .3rem;
+            flex-wrap: wrap;
+        }
+
+        .vibe-pill {
+            padding: .15rem .5rem;
+            border-radius: 5px;
+            font-size: .65rem;
+            font-weight: 500;
+        }
+
+        /* ── HOVER 3D TILT ───────────────── */
+        .book-card {
+            transform-style: preserve-3d;
+            perspective: 800px
+        }
+
+        /* ── ADD BOOK CARD ───────────────── */
+        .add-card {
+            border: 2px dashed var(--border);
+            border-radius: 18px;
+            min-height: 380px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .75rem;
+            cursor: pointer;
+            transition: all .3s;
+            animation: cardIn .5s ease .8s both;
+        }
+
+        .add-card:hover {
+            border-color: rgba(139, 92, 246, .3);
+            background: rgba(139, 92, 246, .04);
+            transform: translateY(-4px);
+        }
+
+        .add-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: rgba(139, 92, 246, .1);
+            display: grid;
+            place-items: center;
+            transition: transform .3s;
+        }
+
+        .add-card:hover .add-icon {
+            transform: scale(1.1) rotate(90deg)
+        }
+
+        .add-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--violet);
+            stroke-width: 2;
+            fill: none
+        }
+
+        .add-text {
+            font-weight: 600;
+            font-size: .9rem;
+            color: var(--text-dim)
+        }
+
+        /* ── LIST VIEW OVERRIDES ─────────── */
+        .list-view .book-card {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .list-view .book-cover {
+            width: 120px;
+            height: auto;
+            min-height: 160px;
+            flex-shrink: 0;
+        }
+
+        .list-view .book-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .list-view .book-title {
+            font-size: 1.05rem
+        }
+
+        .list-view .add-card {
+            min-height: 160px;
+            flex-direction: row;
+            gap: 1rem
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ambient">
+        <div class="a1"></div>
+        <div class="a2"></div>
+        <div class="a3"></div>
+    </div>
+
+    <div class="page">
+        <div class="header">
+            <div>
+                <h1>Your <span>Library</span></h1>
+            </div>
+            <div class="header-stats">
+                <div class="hstat">
+                    <div class="hstat-val v1">8</div>
+                    <div class="hstat-label">Novels</div>
+                </div>
+                <div class="hstat">
+                    <div class="hstat-val v2">2,847</div>
+                    <div class="hstat-label">Chunks</div>
+                </div>
+                <div class="hstat">
+                    <div class="hstat-val v3">312</div>
+                    <div class="hstat-label">Entities</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                </svg>
+                <input type="text" placeholder="Search your library..." id="searchInput">
+            </div>
+            <div class="filter-chips">
+                <div class="fchip all active" data-f="all">All</div>
+                <div class="fchip ready" data-f="ready">Ready</div>
+                <div class="fchip processing" data-f="processing">Processing</div>
+                <div class="fchip failed" data-f="failed">Failed</div>
+            </div>
+            <select class="sort-dropdown" id="sortSelect">
+                <option>Recently Added</option>
+                <option>Title A-Z</option>
+                <option>Most Entities</option>
+            </select>
+            <div class="view-toggle">
+                <button class="vt-btn active" id="gridBtn" title="Grid view">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                </button>
+                <button class="vt-btn" id="listBtn" title="List view">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="8" y1="6" x2="21" y2="6" />
+                        <line x1="8" y1="12" x2="21" y2="12" />
+                        <line x1="8" y1="18" x2="21" y2="18" />
+                        <line x1="3" y1="6" x2="3.01" y2="6" />
+                        <line x1="3" y1="12" x2="3.01" y2="12" />
+                        <line x1="3" y1="18" x2="3.01" y2="18" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="book-grid" id="bookGrid"></div>
+    </div>
+
+    <script>
+        const books = [
+            {
+                title: "The Great Gatsby", author: "F. Scott Fitzgerald", status: "ready", chunks: 312, entities: 47, relations: 89,
+                gradient: "linear-gradient(135deg,#1a365d,#2d3748)", glow: "rgba(59,130,246,.08)",
+                vibes: [{ text: 'Melancholic', bg: 'rgba(59,130,246,.12)', color: '#60a5fa' }, { text: 'Opulent', bg: 'rgba(245,158,11,.12)', color: '#fbbf24' }]
+            },
+            {
+                title: "Pride and Prejudice", author: "Jane Austen", status: "ready", chunks: 428, entities: 32, relations: 67,
+                gradient: "linear-gradient(135deg,#831843,#581c87)", glow: "rgba(236,72,153,.08)",
+                vibes: [{ text: 'Romantic', bg: 'rgba(236,72,153,.12)', color: '#f472b6' }, { text: 'Witty', bg: 'rgba(52,211,153,.12)', color: '#34d399' }]
+            },
+            {
+                title: "1984", author: "George Orwell", status: "ready", chunks: 389, entities: 28, relations: 41,
+                gradient: "linear-gradient(135deg,#1e1b4b,#0f172a)", glow: "rgba(139,92,246,.08)",
+                vibes: [{ text: 'Dystopian', bg: 'rgba(139,92,246,.12)', color: '#a78bfa' }, { text: 'Dark', bg: 'rgba(100,116,139,.12)', color: '#94a3b8' }]
+            },
+            {
+                title: "Dune", author: "Frank Herbert", status: "ready", chunks: 567, entities: 84, relations: 156,
+                gradient: "linear-gradient(135deg,#78350f,#451a03)", glow: "rgba(245,158,11,.08)",
+                vibes: [{ text: 'Epic', bg: 'rgba(245,158,11,.12)', color: '#fbbf24' }, { text: 'Political', bg: 'rgba(168,85,247,.12)', color: '#c084fc' }]
+            },
+            {
+                title: "The Name of the Wind", author: "Patrick Rothfuss", status: "ready", chunks: 612, entities: 63, relations: 112,
+                gradient: "linear-gradient(135deg,#7f1d1d,#1c1917)", glow: "rgba(244,63,94,.08)",
+                vibes: [{ text: 'Adventurous', bg: 'rgba(244,63,94,.12)', color: '#fb7185' }, { text: 'Lyrical', bg: 'rgba(6,182,212,.12)', color: '#22d3ee' }]
+            },
+            {
+                title: "Neuromancer", author: "William Gibson", status: "processing", chunks: 0, entities: 0, relations: 0,
+                gradient: "linear-gradient(135deg,#064e3b,#0c4a6e)", glow: "rgba(6,182,212,.08)",
+                vibes: [{ text: 'Cyberpunk', bg: 'rgba(6,182,212,.12)', color: '#22d3ee' }], processPct: 68
+            },
+            {
+                title: "The Left Hand of Darkness", author: "Ursula K. Le Guin", status: "processing", chunks: 0, entities: 0, relations: 0,
+                gradient: "linear-gradient(135deg,#312e81,#1e3a5f)", glow: "rgba(99,102,241,.08)",
+                vibes: [{ text: 'Philosophical', bg: 'rgba(99,102,241,.12)', color: '#818cf8' }], processPct: 23
+            },
+            {
+                title: "Broken Earth Trilogy", author: "N.K. Jemisin", status: "failed", chunks: 0, entities: 0, relations: 0,
+                gradient: "linear-gradient(135deg,#991b1b,#450a0a)", glow: "rgba(244,63,94,.08)",
+                vibes: [{ text: 'Apocalyptic', bg: 'rgba(244,63,94,.12)', color: '#fb7185' }], error: "Parse error: Unsupported DRM"
+            },
+        ];
+
+        const grid = document.getElementById('bookGrid');
+
+        function renderBooks(filter = 'all', search = '') {
+            grid.innerHTML = '';
+            const filtered = books.filter(b => {
+                if (filter !== 'all' && b.status !== filter) return false;
+                if (search && !b.title.toLowerCase().includes(search) && !b.author.toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            filtered.forEach((b, i) => {
+                const card = document.createElement('div');
+                card.className = 'book-card';
+                card.style.animationDelay = `${i * 0.08}s`;
+                card.style.setProperty('--card-glow', b.glow);
+
+                const statusBadge = `<div class="status-badge ${b.status}">${b.status === 'processing' ? b.processPct + '%' : b.status}</div>`;
+                const processingRing = b.status === 'processing' ? `
+      <div class="processing-ring">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="rgba(245,158,11,0.2)" stroke-width="2"/>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>`: '';
+
+                const stats = b.status === 'ready' ? `
+      <div class="book-stats">
+        <div class="bstat">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          ${b.chunks}
+        </div>
+        <div class="bstat">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          ${b.entities}
+        </div>
+        <div class="bstat">
+          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          ${b.relations}
+        </div>
+      </div>`: (b.status === 'failed' ? `<div class="bstat" style="color:var(--rose);font-size:.75rem">⚠ ${b.error}</div>` : '');
+
+                card.innerHTML = `
+      ${statusBadge}
+      ${processingRing}
+      <div class="book-cover">
+        <div class="book-cover-bg" style="background:${b.gradient}"></div>
+        <div class="cover-overlay"></div>
+        <div class="cover-text">
+          <div class="book-title-display">${b.title}</div>
+          <div class="book-author-display">${b.author}</div>
+        </div>
+      </div>
+      <div class="book-details">
+        <div class="book-title">${b.title}</div>
+        <div class="book-author">${b.author}</div>
+        ${stats}
+        <div class="book-vibe">
+          ${b.vibes.map(v => `<span class="vibe-pill" style="background:${v.bg};color:${v.color}">${v.text}</span>`).join('')}
+        </div>
+      </div>
+    `;
+
+                // 3D tilt effect
+                card.addEventListener('mousemove', e => {
+                    const rect = card.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - .5;
+                    const y = (e.clientY - rect.top) / rect.height - .5;
+                    card.style.transform = `translateY(-8px) scale(1.02) rotateY(${x * 8}deg) rotateX(${-y * 6}deg)`;
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = '';
+                });
+
+                grid.appendChild(card);
+            });
+
+            // Add button
+            const add = document.createElement('div');
+            add.className = 'add-card';
+            add.style.animationDelay = `${filtered.length * 0.08}s`;
+            add.innerHTML = `
+    <div class="add-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+    <div class="add-text">Add a Novel</div>
+  `;
+            grid.appendChild(add);
+        }
+
+        // Filter chips
+        let activeFilter = 'all';
+        document.querySelectorAll('.fchip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.fchip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                activeFilter = chip.dataset.f;
+                renderBooks(activeFilter, document.getElementById('searchInput').value.toLowerCase());
+            });
+        });
+
+        // Search
+        document.getElementById('searchInput').addEventListener('input', e => {
+            renderBooks(activeFilter, e.target.value.toLowerCase());
+        });
+
+        // View toggle
+        document.getElementById('gridBtn').addEventListener('click', () => {
+            grid.classList.remove('list-view');
+            document.getElementById('gridBtn').classList.add('active');
+            document.getElementById('listBtn').classList.remove('active');
+        });
+        document.getElementById('listBtn').addEventListener('click', () => {
+            grid.classList.add('list-view');
+            document.getElementById('listBtn').classList.add('active');
+            document.getElementById('gridBtn').classList.remove('active');
+        });
+
+        // Init
+        renderBooks();
+
+        // Animate processing percentages
+        setInterval(() => {
+            books.forEach(b => {
+                if (b.status === 'processing') {
+                    b.processPct = Math.min(99, b.processPct + Math.floor(Math.random() * 3));
+                }
+            });
+            if (activeFilter === 'all' || activeFilter === 'processing') {
+                document.querySelectorAll('.status-badge.processing').forEach((badge, i) => {
+                    const pb = books.filter(b => b.status === 'processing')[i];
+                    if (pb) badge.textContent = pb.processPct + '%';
+                });
+            }
+        }, 2000);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # Relational Database: PostgreSQL (For Users, Document Metadata, App State)
+  postgres:
+    image: postgres:15-alpine
+    container_name: vibe_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vibe_novel_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vibe_novel_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Vector Database: Qdrant (For Semantic Search Embeddings)
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: vibe_qdrant
+    ports:
+      - "6333:6333" # REST API & Dashboard
+      - "6334:6334" # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # Graph Database: Neo4j (For Character Relationships & GraphRAG)
+  neo4j:
+    image: neo4j:5-community
+    container_name: vibe_neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-password}
+      # Required for GraphRAG/APOC plugins if we add them later
+      # NEO4J_apoc_export_file_enabled: "true"
+      # NEO4J_apoc_import_file_enabled: "true"
+      # NEO4J_apoc_import_file_use__neo4j__config: "true"
+    ports:
+      - "7474:7474" # HTTP / Neo4j Browser
+      - "7687:7687" # Bolt protocol
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Message Broker / Queue: Redis (For Async Document Processing / ARQ)
+  redis:
+    image: redis:7-alpine
+    container_name: vibe_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  neo4j_data:
+  neo4j_logs:
+  redis_data:

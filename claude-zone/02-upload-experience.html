@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Novel — Upload Experience</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: rgba(255, 255, 255, 0.03);
+            --surface-hover: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-active: rgba(139, 92, 246, 0.4);
+            --text: rgba(255, 255, 255, 0.92);
+            --text-dim: rgba(255, 255, 255, 0.45);
+            --violet: #8b5cf6;
+            --rose: #f43f5e;
+            --cyan: #06b6d4;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --blue: #3b82f6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        /* ── AMBIENT ───────────────────────────── */
+        .ambient {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0
+        }
+
+        .ambient div {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(130px);
+            opacity: .25;
+            animation: drift 25s ease-in-out infinite alternate;
+        }
+
+        .amb-1 {
+            width: 500px;
+            height: 500px;
+            top: -15%;
+            left: -5%;
+            background: var(--violet);
+            animation-delay: 0s
+        }
+
+        .amb-2 {
+            width: 400px;
+            height: 400px;
+            bottom: -10%;
+            right: -5%;
+            background: var(--rose);
+            animation-delay: -8s
+        }
+
+        .amb-3 {
+            width: 350px;
+            height: 350px;
+            top: 50%;
+            left: 60%;
+            background: var(--cyan);
+            animation-delay: -15s
+        }
+
+        @keyframes drift {
+            0% {
+                transform: translate(0, 0) scale(1)
+            }
+
+            50% {
+                transform: translate(50px, -30px) scale(1.15)
+            }
+
+            100% {
+                transform: translate(-20px, 40px) scale(0.9)
+            }
+        }
+
+        /* ── MAIN CONTAINER ──────────────────── */
+        .upload-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 680px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -.03em;
+            margin-bottom: .5rem;
+        }
+
+        .page-header h1 span {
+            background: linear-gradient(135deg, var(--violet), var(--rose));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            color: var(--text-dim);
+            font-size: .95rem
+        }
+
+        /* ── DROP ZONE ─────────────────────────── */
+        .drop-zone {
+            position: relative;
+            border: 2px dashed var(--border);
+            border-radius: 24px;
+            padding: 4rem 2rem;
+            text-align: center;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            cursor: pointer;
+            transition: all .4s cubic-bezier(.4, 0, .2, 1);
+            overflow: hidden;
+        }
+
+        .drop-zone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06), transparent 70%);
+            opacity: 0;
+            transition: opacity .4s;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.active {
+            border-color: var(--border-active);
+            background: rgba(139, 92, 246, 0.04);
+            transform: scale(1.01);
+        }
+
+        .drop-zone:hover::before,
+        .drop-zone.active::before {
+            opacity: 1
+        }
+
+        .drop-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(244, 63, 94, 0.08));
+            display: grid;
+            place-items: center;
+            transition: transform .4s;
+        }
+
+        .drop-zone:hover .drop-icon {
+            transform: translateY(-4px) scale(1.05)
+        }
+
+        .drop-icon svg {
+            width: 36px;
+            height: 36px;
+            stroke: var(--violet);
+            stroke-width: 1.5;
+            fill: none
+        }
+
+        .drop-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: .4rem
+        }
+
+        .drop-sub {
+            color: var(--text-dim);
+            font-size: .875rem;
+            margin-bottom: 1.25rem
+        }
+
+        .drop-formats {
+            display: flex;
+            gap: .5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .format-pill {
+            padding: .3rem .75rem;
+            border-radius: 8px;
+            font-size: .75rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        .drop-zone input[type=file] {
+            display: none
+        }
+
+        /* ── RIPPLE ON DROP ───────────────── */
+        .drop-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.15), transparent 70%);
+            transform: scale(0);
+            animation: rippleOut .8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes rippleOut {
+            to {
+                transform: scale(4);
+                opacity: 0
+            }
+        }
+
+        /* ── FILE PREVIEW ─────────────────── */
+        .file-preview {
+            margin-top: 1.5rem;
+            border-radius: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            animation: slideUp .5s ease both;
+            display: none;
+        }
+
+        .file-preview.visible {
+            display: block
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .file-info {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+        }
+
+        .file-icon.pdf {
+            background: rgba(244, 63, 94, 0.12)
+        }
+
+        .file-icon.epub {
+            background: rgba(6, 182, 212, 0.12)
+        }
+
+        .file-icon.txt {
+            background: rgba(245, 158, 11, 0.12)
+        }
+
+        .file-icon span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase
+        }
+
+        .file-icon.pdf span {
+            color: var(--rose)
+        }
+
+        .file-icon.epub span {
+            color: var(--cyan)
+        }
+
+        .file-icon.txt span {
+            color: var(--amber)
+        }
+
+        .file-meta {
+            flex: 1;
+            min-width: 0
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: .95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .file-size {
+            color: var(--text-dim);
+            font-size: .8rem;
+            margin-top: .15rem
+        }
+
+        .file-remove {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(244, 63, 94, 0.08);
+            border: 1px solid rgba(244, 63, 94, 0.15);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+        .file-remove:hover {
+            background: rgba(244, 63, 94, 0.15);
+            transform: scale(1.05)
+        }
+
+        .file-remove svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--rose);
+            stroke-width: 2
+        }
+
+        .upload-btn-wrap {
+            padding: 0 1.5rem 1.5rem;
+            display: none;
+        }
+
+        .upload-btn-wrap.visible {
+            display: block
+        }
+
+        .upload-btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--violet), var(--rose));
+            color: white;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all .3s;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 35px rgba(139, 92, 246, 0.25);
+        }
+
+        .upload-btn:active {
+            transform: translateY(0)
+        }
+
+        .upload-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .12), transparent);
+            opacity: 0;
+            transition: opacity .3s;
+        }
+
+        .upload-btn:hover::after {
+            opacity: 1
+        }
+
+        /* ── PIPELINE TRACKER ──────────────── */
+        .pipeline {
+            margin-top: 1.5rem;
+            border-radius: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            display: none;
+            animation: slideUp .5s ease both;
+        }
+
+        .pipeline.visible {
+            display: block
+        }
+
+        .pipeline-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: .25rem;
+        }
+
+        .pipeline-sub {
+            color: var(--text-dim);
+            font-size: .85rem;
+            margin-bottom: 2rem
+        }
+
+        .pipeline-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            position: relative;
+            padding-bottom: 1.75rem;
+        }
+
+        .step:last-child {
+            padding-bottom: 0
+        }
+
+        /* Vertical connector line */
+        .step::before {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 40px;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+            transition: background .5s;
+        }
+
+        .step:last-child::before {
+            display: none
+        }
+
+        .step.completed::before {
+            background: var(--emerald)
+        }
+
+        .step.active::before {
+            background: linear-gradient(180deg, var(--emerald), var(--border));
+        }
+
+        .step-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            transition: all .5s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-indicator svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2;
+            fill: none;
+            transition: stroke .5s
+        }
+
+        .step.pending .step-indicator svg {
+            stroke: var(--text-dim)
+        }
+
+        .step.active .step-indicator {
+            background: rgba(139, 92, 246, 0.12);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .step.active .step-indicator svg {
+            stroke: var(--violet)
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(139, 92, 246, 0.15)
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(139, 92, 246, 0.25)
+            }
+        }
+
+        .step.completed .step-indicator {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: none;
+            animation: none;
+        }
+
+        .step.completed .step-indicator svg {
+            stroke: var(--emerald)
+        }
+
+        .step.failed .step-indicator {
+            background: rgba(244, 63, 94, 0.12);
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        .step.failed .step-indicator svg {
+            stroke: var(--rose)
+        }
+
+        .step-content {
+            flex: 1;
+            padding-top: .35rem
+        }
+
+        .step-label {
+            font-weight: 600;
+            font-size: .95rem;
+            margin-bottom: .2rem;
+            transition: color .5s
+        }
+
+        .step.pending .step-label {
+            color: var(--text-dim)
+        }
+
+        .step.active .step-label {
+            color: var(--text)
+        }
+
+        .step.completed .step-label {
+            color: var(--emerald)
+        }
+
+        .step-desc {
+            font-size: .8rem;
+            color: var(--text-dim);
+            line-height: 1.5
+        }
+
+        .step-progress {
+            margin-top: .5rem;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+            display: none;
+        }
+
+        .step.active .step-progress {
+            display: block
+        }
+
+        .step-progress-bar {
+            height: 100%;
+            border-radius: 2px;
+            width: 0;
+            background: linear-gradient(90deg, var(--violet), var(--rose));
+            transition: width .3s ease;
+        }
+
+        .step-stats {
+            margin-top: .4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .7rem;
+            color: var(--text-dim);
+            display: none;
+        }
+
+        .step.active .step-stats,
+        .step.completed .step-stats {
+            display: block
+        }
+
+        .step.completed .step-stats {
+            color: rgba(16, 185, 129, 0.6)
+        }
+
+        /* ── COMPLETION CARD ────────────────── */
+        .completion {
+            margin-top: 1.5rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(6, 182, 212, 0.04));
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            padding: 2.5rem;
+            text-align: center;
+            display: none;
+            animation: scaleIn .6s cubic-bezier(.34, 1.56, .64, 1) both;
+        }
+
+        .completion.visible {
+            display: block
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9)
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1)
+            }
+        }
+
+        .completion-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.25rem;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.12);
+            display: grid;
+            place-items: center;
+            animation: successPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes successPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 rgba(16, 185, 129, 0)
+            }
+
+            50% {
+                box-shadow: 0 0 0 12px rgba(16, 185, 129, 0.08)
+            }
+        }
+
+        .completion-icon svg {
+            width: 28px;
+            height: 28px;
+            stroke: var(--emerald);
+            stroke-width: 2.5;
+            fill: none
+        }
+
+        .completion h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: .4rem
+        }
+
+        .completion p {
+            color: var(--text-dim);
+            font-size: .9rem;
+            margin-bottom: 1.5rem
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            padding: 1rem 1.5rem;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-value.chunks {
+            color: var(--violet)
+        }
+
+        .stat-value.entities {
+            color: var(--cyan)
+        }
+
+        .stat-value.relations {
+            color: var(--rose)
+        }
+
+        .stat-label {
+            font-size: .75rem;
+            color: var(--text-dim);
+            margin-top: .2rem
+        }
+
+        .explore-btn {
+            padding: .85rem 2.5rem;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--emerald), var(--cyan));
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .explore-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+        }
+
+        /* ── SPARKLE PARTICLES ──────────────── */
+        .sparkles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100;
+            display: none
+        }
+
+        .sparkles.active {
+            display: block
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: sparkleFloat 1.5s ease-out forwards;
+        }
+
+        @keyframes sparkleFloat {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1)
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(var(--sx), var(--sy)) scale(0)
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ambient">
+        <div class="amb-1"></div>
+        <div class="amb-2"></div>
+        <div class="amb-3"></div>
+    </div>
+    <div class="sparkles" id="sparkles"></div>
+
+    <div class="upload-container">
+        <div class="page-header">
+            <h1>Add to Your <span>Library</span></h1>
+            <p>Upload novels and let our AI extract the magic within</p>
+        </div>
+
+        <!-- Drop Zone -->
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+            </div>
+            <div class="drop-title">Drop your novel here</div>
+            <div class="drop-sub">or click to browse files</div>
+            <div class="drop-formats">
+                <span class="format-pill">.PDF</span>
+                <span class="format-pill">.EPUB</span>
+                <span class="format-pill">.TXT</span>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf,.epub,.txt">
+        </div>
+
+        <!-- File Preview -->
+        <div class="file-preview" id="filePreview">
+            <div class="file-info">
+                <div class="file-icon" id="fileIcon"><span id="fileExt">PDF</span></div>
+                <div class="file-meta">
+                    <div class="file-name" id="fileName">novel.pdf</div>
+                    <div class="file-size" id="fileSize">12.4 MB</div>
+                </div>
+                <div class="file-remove" id="fileRemove" title="Remove file">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </div>
+            </div>
+            <div class="upload-btn-wrap" id="uploadBtnWrap">
+                <button class="upload-btn" id="uploadBtn">
+                    ✦ Begin Processing
+                </button>
+            </div>
+        </div>
+
+        <!-- Processing Pipeline -->
+        <div class="pipeline" id="pipeline">
+            <div class="pipeline-title">Processing Pipeline</div>
+            <div class="pipeline-sub">AI is reading and understanding your novel...</div>
+
+            <div class="pipeline-steps">
+                <div class="step pending" id="step-parse">
+                    <div class="step-indicator">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-label">Parsing Document</div>
+                        <div class="step-desc">Extracting raw text from your novel</div>
+                        <div class="step-progress">
+                            <div class="step-progress-bar"></div>
+                        </div>
+                        <div class="step-stats"></div>
+                    </div>
+                </div>
+
+                <div class="step pending" id="step-chunk">
+                    <div class="step-indicator">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                        </svg>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-label">Narrative Chunking</div>
+                        <div class="step-desc">Splitting by scenes & paragraphs, not blind tokens</div>
+                        <div class="step-progress">
+                            <div class="step-progress-bar"></div>
+                        </div>
+                        <div class="step-stats"></div>
+                    </div>
+                </div>
+
+                <div class="step pending" id="step-embed">
+                    <div class="step-indicator">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                            <path d="M2 12h20" />
+                        </svg>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-label">Generating Embeddings</div>
+                        <div class="step-desc">Creating semantic vectors for vibe search</div>
+                        <div class="step-progress">
+                            <div class="step-progress-bar"></div>
+                        </div>
+                        <div class="step-stats"></div>
+                    </div>
+                </div>
+
+                <div class="step pending" id="step-ner">
+                    <div class="step-indicator">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-label">Entity Extraction</div>
+                        <div class="step-desc">Finding characters, places, and relationships</div>
+                        <div class="step-progress">
+                            <div class="step-progress-bar"></div>
+                        </div>
+                        <div class="step-stats"></div>
+                    </div>
+                </div>
+
+                <div class="step pending" id="step-graph">
+                    <div class="step-indicator">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round">
+                            <circle cx="12" cy="5" r="3" />
+                            <circle cx="5" cy="19" r="3" />
+                            <circle cx="19" cy="19" r="3" />
+                            <line x1="12" y1="8" x2="5" y2="16" />
+                            <line x1="12" y1="8" x2="19" y2="16" />
+                            <line x1="5" y1="19" x2="19" y2="19" />
+                        </svg>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-label">Building Knowledge Graph</div>
+                        <div class="step-desc">Populating Neo4j with character relationships</div>
+                        <div class="step-progress">
+                            <div class="step-progress-bar"></div>
+                        </div>
+                        <div class="step-stats"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completion -->
+        <div class="completion" id="completion">
+            <div class="completion-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+            </div>
+            <h2>Your Novel is Alive!</h2>
+            <p>"The Great Gatsby" has been processed and indexed</p>
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value chunks" id="statChunks">0</div>
+                    <div class="stat-label">Chunks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value entities" id="statEntities">0</div>
+                    <div class="stat-label">Entities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value relations" id="statRelations">0</div>
+                    <div class="stat-label">Relations</div>
+                </div>
+            </div>
+            <button class="explore-btn">Explore Knowledge Graph →</button>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const uploadBtnWrap = document.getElementById('uploadBtnWrap');
+        const pipeline = document.getElementById('pipeline');
+        const completion = document.getElementById('completion');
+        let selectedFile = null;
+
+        /* ── DROP & SELECT ───────────────────── */
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('active') });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault(); dropZone.classList.remove('active');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+            // ripple
+            const rect = dropZone.getBoundingClientRect();
+            const r = document.createElement('div'); r.className = 'drop-ripple';
+            r.style.cssText = `left:${e.clientX - rect.left}px;top:${e.clientY - rect.top}px;width:100px;height:100px;margin:-50px 0 0 -50px`;
+            dropZone.appendChild(r); setTimeout(() => r.remove(), 800);
+        });
+        fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]) });
+
+        function handleFile(file) {
+            selectedFile = file;
+            const ext = file.name.split('.').pop().toLowerCase();
+            const icon = document.getElementById('fileIcon');
+            icon.className = 'file-icon ' + (ext === 'pdf' ? 'pdf' : ext === 'epub' ? 'epub' : 'txt');
+            document.getElementById('fileExt').textContent = ext.toUpperCase();
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatBytes(file.size);
+            filePreview.classList.add('visible');
+            uploadBtnWrap.classList.add('visible');
+        }
+
+        document.getElementById('fileRemove').addEventListener('click', () => {
+            selectedFile = null;
+            filePreview.classList.remove('visible');
+            uploadBtnWrap.classList.remove('visible');
+            fileInput.value = '';
+        });
+
+        function formatBytes(b) {
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1048576).toFixed(1) + ' MB';
+        }
+
+        /* ── SIMULATED PROCESSING PIPELINE ──── */
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            dropZone.style.display = 'none';
+            filePreview.style.display = 'none';
+            uploadBtnWrap.classList.remove('visible');
+            pipeline.classList.add('visible');
+            runPipeline();
+        });
+
+        const steps = [
+            { id: 'step-parse', duration: 2500, stats: '247 pages → 1,842 paragraphs extracted' },
+            { id: 'step-chunk', duration: 3000, stats: '1,842 paragraphs → 312 narrative chunks' },
+            { id: 'step-embed', duration: 3500, stats: '312 vectors @ 1536 dimensions stored in Qdrant' },
+            { id: 'step-ner', duration: 3000, stats: '47 characters, 12 locations, 8 events identified' },
+            { id: 'step-graph', duration: 2000, stats: '47 nodes, 89 relationship edges created' },
+        ];
+
+        async function runPipeline() {
+            for (let i = 0; i < steps.length; i++) {
+                const s = steps[i];
+                const el = document.getElementById(s.id);
+                el.className = 'step active';
+
+                const bar = el.querySelector('.step-progress-bar');
+                const statsEl = el.querySelector('.step-stats');
+
+                // Animate progress
+                const start = performance.now();
+                await new Promise(resolve => {
+                    function tick() {
+                        const elapsed = performance.now() - start;
+                        const pct = Math.min(elapsed / s.duration * 100, 100);
+                        bar.style.width = pct + '%';
+                        if (pct < 100) requestAnimationFrame(tick);
+                        else {
+                            el.className = 'step completed';
+                            statsEl.textContent = '✓ ' + s.stats;
+                            resolve();
+                        }
+                    }
+                    tick();
+                });
+
+                await sleep(300);
+            }
+            await sleep(600);
+            pipeline.style.display = 'none';
+            completion.classList.add('visible');
+            animateStats();
+            burstSparkles();
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
+
+        /* ── STAT COUNTER ANIMATION ─────────── */
+        function animateStats() {
+            animateCount('statChunks', 312, 1200);
+            animateCount('statEntities', 47, 1000);
+            animateCount('statRelations', 89, 1100);
+        }
+        function animateCount(id, target, duration) {
+            const el = document.getElementById(id);
+            const start = performance.now();
+            function tick() {
+                const elapsed = performance.now() - start;
+                const pct = Math.min(elapsed / duration, 1);
+                const ease = 1 - Math.pow(1 - pct, 3);
+                el.textContent = Math.round(target * ease);
+                if (pct < 1) requestAnimationFrame(tick);
+            }
+            tick();
+        }
+
+        /* ── SPARKLE BURST ──────────────────── */
+        function burstSparkles() {
+            const container = document.getElementById('sparkles');
+            container.classList.add('active');
+            const colors = ['#8b5cf6', '#f43f5e', '#06b6d4', '#10b981', '#f59e0b', '#ffffff'];
+            for (let i = 0; i < 60; i++) {
+                const s = document.createElement('div');
+                s.className = 'sparkle';
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 100 + Math.random() * 200;
+                s.style.cssText = `
+      left:50%;top:50%;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      --sx:${Math.cos(angle) * dist}px;
+      --sy:${Math.sin(angle) * dist}px;
+      animation-delay:${Math.random() * 0.3}s;
+      width:${3 + Math.random() * 4}px;
+      height:${3 + Math.random() * 4}px;
+    `;
+                container.appendChild(s);
+                setTimeout(() => s.remove(), 2000);
+            }
+            setTimeout(() => container.classList.remove('active'), 2500);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Novel — Vibe Search</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 2s ease, color .5s;
+            background: #0a0a0f;
+            color: rgba(255, 255, 255, .92);
+        }
+
+        /* ── AMBIENT MESH GRADIENT ──────────── */
+        .ambient-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            transition: opacity 2s;
+        }
+
+        .mesh-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(150px);
+            transition: all 2.5s cubic-bezier(.4, 0, .2, 1);
+            opacity: .3;
+        }
+
+        .blob-1 {
+            width: 50vw;
+            height: 50vw;
+            top: -15%;
+            left: -10%
+        }
+
+        .blob-2 {
+            width: 40vw;
+            height: 40vw;
+            bottom: -10%;
+            right: -10%
+        }
+
+        .blob-3 {
+            width: 35vw;
+            height: 35vw;
+            top: 40%;
+            left: 50%
+        }
+
+        /* ── MOOD THEMES ────────────────────── */
+        body.neutral .blob-1 {
+            background: #8b5cf6
+        }
+
+        body.neutral .blob-2 {
+            background: #f43f5e
+        }
+
+        body.neutral .blob-3 {
+            background: #06b6d4
+        }
+
+        body.melancholy {
+            background: #080c14
+        }
+
+        body.melancholy .blob-1 {
+            background: #1e3a5f
+        }
+
+        body.melancholy .blob-2 {
+            background: #4338ca
+        }
+
+        body.melancholy .blob-3 {
+            background: #0c4a6e
+        }
+
+        body.passion {
+            background: #140808
+        }
+
+        body.passion .blob-1 {
+            background: #dc2626
+        }
+
+        body.passion .blob-2 {
+            background: #ea580c
+        }
+
+        body.passion .blob-3 {
+            background: #b91c1c
+        }
+
+        body.mystery {
+            background: #0c0816
+        }
+
+        body.mystery .blob-1 {
+            background: #6d28d9
+        }
+
+        body.mystery .blob-2 {
+            background: #1e1b4b
+        }
+
+        body.mystery .blob-3 {
+            background: #7e22ce
+        }
+
+        body.serenity {
+            background: #081210
+        }
+
+        body.serenity .blob-1 {
+            background: #065f46
+        }
+
+        body.serenity .blob-2 {
+            background: #0d9488
+        }
+
+        body.serenity .blob-3 {
+            background: #155e75
+        }
+
+        body.wonder {
+            background: #12080c
+        }
+
+        body.wonder .blob-1 {
+            background: #be185d
+        }
+
+        body.wonder .blob-2 {
+            background: #c026d3
+        }
+
+        body.wonder .blob-3 {
+            background: #7c3aed
+        }
+
+        /* ── LAYOUT ────────────────────────── */
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── HEADER ────────────────────────── */
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn .8s ease both;
+        }
+
+        .app-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -.02em;
+        }
+
+        .app-header h1 span {
+            background: linear-gradient(135deg, #8b5cf6, #f43f5e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 2s;
+        }
+
+        .app-header p {
+            color: rgba(255, 255, 255, .4);
+            margin-top: .35rem;
+            font-size: .9rem
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* ── SEARCH ────────────────────────── */
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+            animation: fadeIn .8s ease .2s both;
+        }
+
+        .search-field {
+            width: 100%;
+            padding: 1.1rem 1.5rem 1.1rem 3.2rem;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+            color: rgba(255, 255, 255, .92);
+            font-size: 1.1rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color .4s, box-shadow .4s;
+        }
+
+        .search-field::placeholder {
+            color: rgba(255, 255, 255, .3)
+        }
+
+        .search-field:focus {
+            border-color: rgba(139, 92, 246, .4);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, .08), 0 8px 30px rgba(0, 0, 0, .2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, .3);
+            transition: color .3s;
+        }
+
+        .search-field:focus~.search-icon {
+            color: rgba(139, 92, 246, .6)
+        }
+
+        /* ── MOOD INDICATOR ────────────────── */
+        .mood-bar {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .5rem 0;
+            margin-bottom: 2rem;
+            animation: fadeIn .8s ease .3s both;
+        }
+
+        .mood-label {
+            font-size: .75rem;
+            color: rgba(255, 255, 255, .35);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .1em
+        }
+
+        .mood-chip {
+            padding: .3rem .8rem;
+            border-radius: 100px;
+            font-size: .75rem;
+            font-weight: 600;
+            opacity: 0;
+            transform: scale(.8);
+            transition: all .5s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        .mood-chip.visible {
+            opacity: 1;
+            transform: scale(1)
+        }
+
+        .mood-spectrum {
+            flex: 1;
+            height: 3px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, .06);
+            overflow: hidden;
+            margin-left: .5rem;
+        }
+
+        .mood-spectrum-fill {
+            height: 100%;
+            border-radius: 2px;
+            width: 0;
+            transition: width 1.5s ease, background 2s;
+            background: linear-gradient(90deg, #8b5cf6, #f43f5e);
+        }
+
+        /* ── RESULTS ───────────────────────── */
+        .results {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem
+        }
+
+        .result-card {
+            padding: 1.75rem;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .06);
+            backdrop-filter: blur(12px);
+            cursor: pointer;
+            transition: all .4s cubic-bezier(.4, 0, .2, 1);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: resultIn .6s ease forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            opacity: 0;
+            transition: opacity .4s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, .1);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+        }
+
+        .result-card:hover::before {
+            opacity: 1
+        }
+
+        @keyframes resultIn {
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .result-quote {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.15rem;
+            line-height: 1.75;
+            margin-bottom: 1rem;
+            position: relative;
+            padding-left: 1.25rem;
+        }
+
+        .result-quote::before {
+            content: '"';
+            position: absolute;
+            left: -.1rem;
+            top: -.25rem;
+            font-size: 3rem;
+            font-weight: 700;
+            opacity: .15;
+            line-height: 1;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .result-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        .result-book {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .book-cover {
+            width: 32px;
+            height: 44px;
+            border-radius: 4px;
+            display: grid;
+            place-items: center;
+            font-size: .55rem;
+            font-weight: 800;
+            letter-spacing: .05em;
+            color: rgba(255, 255, 255, .8);
+        }
+
+        .book-info .book-title {
+            font-weight: 700;
+            font-size: .85rem
+        }
+
+        .book-info .book-author {
+            font-size: .75rem;
+            color: rgba(255, 255, 255, .4)
+        }
+
+        .result-score {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .75rem;
+            color: rgba(255, 255, 255, .4);
+        }
+
+        .score-bar {
+            width: 40px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, .08);
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1s ease
+        }
+
+        .result-tags {
+            display: flex;
+            gap: .4rem;
+            margin-top: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .result-tag {
+            padding: .2rem .6rem;
+            border-radius: 6px;
+            font-size: .7rem;
+            font-weight: 500;
+            transition: all .3s;
+        }
+
+        /* ── SUGGESTED VIBES ──────────────── */
+        .suggestions {
+            margin-top: auto;
+            padding-top: 2rem;
+            animation: fadeIn .8s ease .5s both;
+        }
+
+        .suggestions h3 {
+            font-size: .75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            color: rgba(255, 255, 255, .3);
+            margin-bottom: .75rem;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap
+        }
+
+        .suggestion {
+            padding: .5rem 1rem;
+            border-radius: 12px;
+            font-size: .8rem;
+            font-weight: 500;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .06);
+            cursor: pointer;
+            transition: all .3s;
+            color: rgba(255, 255, 255, .6);
+        }
+
+        .suggestion:hover {
+            background: rgba(139, 92, 246, .1);
+            border-color: rgba(139, 92, 246, .2);
+            color: rgba(255, 255, 255, .9);
+            transform: translateY(-2px);
+        }
+
+        /* ── AUDIO VISUALIZER BAR ──────────── */
+        .audio-viz {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            z-index: 10;
+            display: flex;
+            gap: 1px;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        .audio-viz.active {
+            opacity: 1
+        }
+
+        .viz-bar {
+            flex: 1;
+            border-radius: 1px 1px 0 0;
+            transition: height .15s, background 2s;
+        }
+    </style>
+</head>
+
+<body class="neutral">
+
+    <div class="ambient-mesh">
+        <div class="mesh-blob blob-1"></div>
+        <div class="mesh-blob blob-2"></div>
+        <div class="mesh-blob blob-3"></div>
+    </div>
+
+    <div class="audio-viz" id="audioViz"></div>
+
+    <div class="app">
+        <div class="app-header">
+            <h1>Search by <span id="headerGradient">Vibe</span></h1>
+            <p>Describe a mood. Discover a story.</p>
+        </div>
+
+        <div class="search-wrapper">
+            <input class="search-field" id="searchInput" type="text" placeholder="A lonely walk under pale moonlight..."
+                autocomplete="off">
+            <span class="search-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                </svg>
+            </span>
+        </div>
+
+        <div class="mood-bar">
+            <span class="mood-label">Detected Vibe:</span>
+            <span class="mood-chip" id="moodChip">—</span>
+            <div class="mood-spectrum">
+                <div class="mood-spectrum-fill" id="spectrumFill"></div>
+            </div>
+        </div>
+
+        <div class="results" id="results"></div>
+
+        <div class="suggestions" id="suggestions">
+            <h3>Try a vibe</h3>
+            <div class="suggestion-chips">
+                <div class="suggestion" data-q="melancholic rain falling on empty streets">🌧 Melancholic rain</div>
+                <div class="suggestion" data-q="burning passion and forbidden desire">🔥 Burning passion</div>
+                <div class="suggestion" data-q="dark corridors and whispered secrets">🌑 Dark mystery</div>
+                <div class="suggestion" data-q="peaceful mountain lake at dawn">🏔 Serene nature</div>
+                <div class="suggestion" data-q="childlike wonder under a sky of stars">✨ Starlit wonder</div>
+                <div class="suggestion" data-q="battlefield courage and sacrifice">⚔️ Epic valor</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ═══════════════════════════════════════
+           VIBE SEARCH — MOOD REACTIVE INTERFACE
+           ═══════════════════════════════════════ */
+
+        const searchInput = document.getElementById('searchInput');
+        const resultsEl = document.getElementById('results');
+        const moodChip = document.getElementById('moodChip');
+        const spectrumFill = document.getElementById('spectrumFill');
+        const suggestionsEl = document.getElementById('suggestions');
+        const audioViz = document.getElementById('audioViz');
+        const headerGrad = document.getElementById('headerGradient');
+
+        // Create audio viz bars
+        for (let i = 0; i < 80; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'viz-bar';
+            audioViz.appendChild(bar);
+        }
+        const vizBars = [...audioViz.children];
+
+        /* ── MOOD DATABASE ────────────────────── */
+        const moods = {
+            melancholy: {
+                bodyClass: 'melancholy',
+                chipBg: 'rgba(59,130,246,.15)', chipColor: '#60a5fa', chipText: 'Melancholic',
+                headerGrad: 'linear-gradient(135deg,#3b82f6,#6366f1)',
+                spectrumBg: 'linear-gradient(90deg,#1e3a5f,#4338ca)',
+                spectrumWidth: '65%',
+                tagStyle: { bg: 'rgba(59,130,246,.1)', color: '#60a5fa', border: 'rgba(59,130,246,.15)' },
+                cardAccent: 'linear-gradient(90deg,transparent,#3b82f6,transparent)',
+                coverColor: 'linear-gradient(135deg,#1e3a5f,#374151)',
+                scoreFill: '#3b82f6',
+                vizColor: '#3b82f6',
+                results: [
+                    { quote: "The rain fell softly on the tin roof, each drop a whispered memory of the summer we'd never have again. She sat by the window, tracing old letters with frozen fingers.", book: "The Autumn Letters", author: "Elena Marsh", score: .94, tags: ['Melancholic', 'Nostalgic', 'Rain', 'Loss'] },
+                    { quote: "He walked the empty streets at midnight, his footsteps the only sound in a city that had forgotten how to breathe.", book: "Ghost Protocol", author: "R. Tannen", score: .87, tags: ['Solitary', 'Urban', 'Midnight', 'Sorrow'] },
+                    { quote: "There was a kind of beauty in her sadness — the way she wore grief like a second skin, elegant and inevitable.", book: "The Widow's Garden", author: "C. Finch", score: .82, tags: ['Grief', 'Beauty', 'Elegance', 'Darkness'] },
+                ]
+            },
+            passion: {
+                bodyClass: 'passion',
+                chipBg: 'rgba(244,63,94,.15)', chipColor: '#fb7185', chipText: 'Passionate',
+                headerGrad: 'linear-gradient(135deg,#f43f5e,#ea580c)',
+                spectrumBg: 'linear-gradient(90deg,#dc2626,#ea580c)',
+                spectrumWidth: '85%',
+                tagStyle: { bg: 'rgba(244,63,94,.1)', color: '#fb7185', border: 'rgba(244,63,94,.15)' },
+                cardAccent: 'linear-gradient(90deg,transparent,#f43f5e,transparent)',
+                coverColor: 'linear-gradient(135deg,#991b1b,#7c2d12)',
+                scoreFill: '#f43f5e',
+                vizColor: '#f43f5e',
+                results: [
+                    { quote: "She burned with a fire that could not be tamed — wild, reckless, and utterly magnificent in her fury. The room itself seemed to ignite around her.", book: "Crimson Horizons", author: "James Aldric", score: .96, tags: ['Passionate', 'Fire', 'Intense', 'Power'] },
+                    { quote: "Their kiss was a collision of two worlds — desperate, hungry, breaking every rule they'd sworn to follow.", book: "The Heretic's Vow", author: "A. Castellano", score: .91, tags: ['Desire', 'Forbidden', 'Reckless', 'Urgency'] },
+                    { quote: "He fought not for glory, but for the burning ache inside — the need to prove that he was more than the ashes of his past.", book: "Iron & Ember", author: "K. Volkov", score: .84, tags: ['Determination', 'Fire', 'Struggle', 'Redemption'] },
+                ]
+            },
+            mystery: {
+                bodyClass: 'mystery',
+                chipBg: 'rgba(139,92,246,.15)', chipColor: '#a78bfa', chipText: 'Mysterious',
+                headerGrad: 'linear-gradient(135deg,#8b5cf6,#7c3aed)',
+                spectrumBg: 'linear-gradient(90deg,#6d28d9,#1e1b4b)',
+                spectrumWidth: '72%',
+                tagStyle: { bg: 'rgba(139,92,246,.1)', color: '#a78bfa', border: 'rgba(139,92,246,.15)' },
+                cardAccent: 'linear-gradient(90deg,transparent,#8b5cf6,transparent)',
+                coverColor: 'linear-gradient(135deg,#3b0764,#1e1b4b)',
+                scoreFill: '#8b5cf6',
+                vizColor: '#8b5cf6',
+                results: [
+                    { quote: "The corridor stretched into shadow, and somewhere in the dark, something was breathing that shouldn't have been alive.", book: "The Holloway Case", author: "R.C. Blackthorn", score: .93, tags: ['Dark', 'Suspense', 'Gothic', 'Fear'] },
+                    { quote: "Every door in the manor led somewhere — except the third one on the left, which led to questions nobody wanted answered.", book: "Carmine House", author: "E. Wren", score: .88, tags: ['Mystery', 'Gothic', 'Secrets', 'Architecture'] },
+                    { quote: "The photograph showed three people. Only two of them had ever existed.", book: "The Erasure Files", author: "D. Kessler", score: .85, tags: ['Paranoia', 'Suspense', 'Conspiracy', 'Photography'] },
+                ]
+            },
+            serenity: {
+                bodyClass: 'serenity',
+                chipBg: 'rgba(6,182,212,.15)', chipColor: '#22d3ee', chipText: 'Serene',
+                headerGrad: 'linear-gradient(135deg,#06b6d4,#10b981)',
+                spectrumBg: 'linear-gradient(90deg,#065f46,#0891b2)',
+                spectrumWidth: '78%',
+                tagStyle: { bg: 'rgba(6,182,212,.1)', color: '#22d3ee', border: 'rgba(6,182,212,.15)' },
+                cardAccent: 'linear-gradient(90deg,transparent,#06b6d4,transparent)',
+                coverColor: 'linear-gradient(135deg,#064e3b,#155e75)',
+                scoreFill: '#06b6d4',
+                vizColor: '#06b6d4',
+                results: [
+                    { quote: "The lake was glass, the mountains held their breath, and for one perfect moment, the world simply... was.", book: "Still Waters", author: "Amara Yoshida", score: .95, tags: ['Serene', 'Nature', 'Peace', 'Stillness'] },
+                    { quote: "She sat beneath the cherry tree, petals falling like slow rain, each one a tiny reminder that beauty doesn't need to last.", book: "The Garden Year", author: "H. Tanaka", score: .89, tags: ['Zen', 'Nature', 'Impermanence', 'Beauty'] },
+                    { quote: "Morning light poured through the cabin window like liquid gold, warming the old dog at his feet and the silence between them.", book: "The Long Return", author: "S. McBride", score: .83, tags: ['Morning', 'Warmth', 'Solitude', 'Comfort'] },
+                ]
+            },
+            wonder: {
+                bodyClass: 'wonder',
+                chipBg: 'rgba(236,72,153,.15)', chipColor: '#f472b6', chipText: 'Wonderstruck',
+                headerGrad: 'linear-gradient(135deg,#ec4899,#c026d3)',
+                spectrumBg: 'linear-gradient(90deg,#be185d,#7c3aed)',
+                spectrumWidth: '90%',
+                tagStyle: { bg: 'rgba(236,72,153,.1)', color: '#f472b6', border: 'rgba(236,72,153,.15)' },
+                cardAccent: 'linear-gradient(90deg,transparent,#ec4899,transparent)',
+                coverColor: 'linear-gradient(135deg,#831843,#581c87)',
+                scoreFill: '#ec4899',
+                vizColor: '#ec4899',
+                results: [
+                    { quote: "The sky cracked open and stars fell like diamonds into the ocean, and for the first time in her life, she believed in impossible things.", book: "The Starfall Codex", author: "L. Navarro", score: .97, tags: ['Wonder', 'Stars', 'Magic', 'Infinity'] },
+                    { quote: "He opened the book and the words lifted off the page, swirling around him like fireflies made of pure thought.", book: "The Architect's Dream", author: "P. Lysander", score: .90, tags: ['Fantasy', 'Wonder', 'Books', 'Magic'] },
+                    { quote: "Every atom of her body remembered the universe it came from — stardust recognizing stardust across the void.", book: "Cosmic Inheritance", author: "J. Okafor", score: .86, tags: ['Cosmic', 'Wonder', 'Connection', 'Stardust'] },
+                ]
+            },
+        };
+
+        const keywords = {
+            melancholy: ['rain', 'sad', 'melan', 'sorrow', 'tear', 'lonely', 'grey', 'gray', 'autumn', 'cold', 'lost', 'miss', 'empty', 'pale', 'moon', 'fad', 'wilt', 'weep'],
+            passion: ['passion', 'fire', 'burn', 'love', 'heat', 'intense', 'desire', 'fury', 'wild', 'heart', 'flame', 'rage', 'kiss', 'forbidden', 'war', 'battle', 'courage', 'fight', 'blaz'],
+            mystery: ['dark', 'mystery', 'shadow', 'secret', 'night', 'hidden', 'whisper', 'fog', 'silence', 'fear', 'creep', 'corridor', 'door', 'unknow', 'ghost', 'haunt', 'eeri'],
+            serenity: ['peace', 'calm', 'serene', 'still', 'quiet', 'gentle', 'nature', 'lake', 'mountain', 'breath', 'zen', 'tranquil', 'morning', 'dawn', 'soft', 'warm', 'garden'],
+            wonder: ['wonder', 'star', 'magic', 'dream', 'infinite', 'cosmic', 'glow', 'shimmer', 'sparkle', 'child', 'sky', 'float', 'amaz', 'miracl', 'beaut', 'enchant'],
+        };
+
+        /* ── DETECT MOOD ──────────────────────── */
+        function detectMood(query) {
+            const q = query.toLowerCase();
+            if (q.length < 3) return null;
+            let best = null, bestScore = 0;
+            for (const [mood, words] of Object.entries(keywords)) {
+                let score = words.reduce((s, w) => s + (q.includes(w) ? 1 : 0), 0);
+                if (score > bestScore) { bestScore = score; best = mood }
+            }
+            return best || ['melancholy', 'passion', 'mystery', 'serenity', 'wonder'][Math.floor(Math.random() * 5)];
+        }
+
+        /* ── APPLY MOOD ──────────────────────── */
+        let currentMood = null;
+
+        function applyMood(moodKey) {
+            if (moodKey === currentMood) return;
+            currentMood = moodKey;
+            const m = moods[moodKey];
+
+            // Body class
+            document.body.className = m.bodyClass;
+
+            // Header gradient
+            headerGrad.style.background = m.headerGrad;
+            headerGrad.style.webkitBackgroundClip = 'text';
+            headerGrad.style.webkitTextFillColor = 'transparent';
+
+            // Mood chip
+            moodChip.style.background = m.chipBg;
+            moodChip.style.color = m.chipColor;
+            moodChip.textContent = m.chipText;
+            moodChip.classList.add('visible');
+
+            // Spectrum
+            spectrumFill.style.width = m.spectrumWidth;
+            spectrumFill.style.background = m.spectrumBg;
+
+            // Audio viz
+            audioViz.classList.add('active');
+            animateViz(m.vizColor);
+
+            // Render results
+            renderResults(m);
+
+            // Hide suggestions
+            suggestionsEl.style.display = 'none';
+        }
+
+        function renderResults(m) {
+            resultsEl.innerHTML = '';
+            m.results.forEach((r, i) => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                card.style.animationDelay = `${i * 0.12}s`;
+                card.querySelector?.('::before')?.style;
+                card.innerHTML = `
+      <style>.result-card:nth-child(${i + 1})::before{background:${m.cardAccent}}</style>
+      <div class="result-quote">${r.quote}</div>
+      <div class="result-meta">
+        <div class="result-book">
+          <div class="book-cover" style="background:${m.coverColor}">${r.book.split(' ').map(w => w[0]).join('').slice(0, 2)}</div>
+          <div class="book-info">
+            <div class="book-title">${r.book}</div>
+            <div class="book-author">by ${r.author}</div>
+          </div>
+        </div>
+        <div class="result-score">
+          <div class="score-bar"><div class="score-fill" style="width:${r.score * 100}%;background:${m.scoreFill}"></div></div>
+          ${(r.score * 100).toFixed(0)}% match
+        </div>
+      </div>
+      <div class="result-tags">
+        ${r.tags.map(t => `<span class="result-tag" style="background:${m.tagStyle.bg};color:${m.tagStyle.color};border:1px solid ${m.tagStyle.border}">${t}</span>`).join('')}
+      </div>
+    `;
+                resultsEl.appendChild(card);
+            });
+        }
+
+        /* ── AUDIO VISUALIZER ────────────────── */
+        let vizAnimId;
+        function animateViz(color) {
+            if (vizAnimId) cancelAnimationFrame(vizAnimId);
+            function tick() {
+                vizBars.forEach((bar, i) => {
+                    const h = 2 + Math.random() * 8 + Math.sin(Date.now() / 300 + i * .3) * 4;
+                    bar.style.height = h + 'px';
+                    bar.style.background = color;
+                    bar.style.opacity = 0.3 + Math.random() * 0.4;
+                });
+                vizAnimId = requestAnimationFrame(tick);
+            }
+            tick();
+        }
+
+        /* ── INPUT HANDLING ──────────────────── */
+        let debounce;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounce);
+            debounce = setTimeout(() => {
+                const q = searchInput.value.trim();
+                if (q.length < 3) {
+                    resetUI(); return;
+                }
+                const mood = detectMood(q);
+                if (mood) applyMood(mood);
+            }, 500);
+        });
+
+        function resetUI() {
+            document.body.className = 'neutral';
+            currentMood = null;
+            moodChip.classList.remove('visible');
+            spectrumFill.style.width = '0';
+            audioViz.classList.remove('active');
+            resultsEl.innerHTML = '';
+            suggestionsEl.style.display = '';
+            headerGrad.style.background = 'linear-gradient(135deg,#8b5cf6,#f43f5e)';
+            headerGrad.style.webkitBackgroundClip = 'text';
+            headerGrad.style.webkitTextFillColor = 'transparent';
+            if (vizAnimId) cancelAnimationFrame(vizAnimId);
+        }
+
+        /* ── SUGGESTION CHIPS ────────────────── */
+        document.querySelectorAll('.suggestion').forEach(chip => {
+            chip.addEventListener('click', () => {
+                searchInput.value = chip.dataset.q;
+                searchInput.dispatchEvent(new Event('input'));
+            });
+        });
+
+        /* ── INIT ───────────────────────────── */
+        resetUI();
+    </script>
+</body>
+
+</html>
