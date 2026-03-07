@@ -46,22 +46,22 @@ Upload a novel. Ask about a vibe. Get back the exact scene, excerpt, and AI-synt
 
 ```mermaid
 graph TD
-    User["🧑 User"] -->|Upload novel| FE["⚛️ React Frontend\n(Vite + Tailwind)"]
-    User -->|Vibe query| FE
-    FE -->|POST /api/documents| API["🐍 FastAPI Backend"]
+    User["User"] -->|Upload novel| FE["React Frontend\nVite + Tailwind"]
+    User -->|Mood query| FE
+    FE -->|POST /api/documents| API["FastAPI Backend"]
     FE -->|POST /api/search| API
-    API -->|Save file + DB record| PG[("🐘 PostgreSQL\n(Documents + Status)")]
-    API -->|Enqueue job| Redis[("🔴 Redis Queue")]
-    Redis -->|Dequeue| Worker["⚙️ ARQ Worker"]
+    API -->|Save file + DB record| PG[("PostgreSQL\nDocuments + Status")]
+    API -->|Enqueue job| Redis[("Redis Queue")]
+    Redis -->|Dequeue| Worker["ARQ Worker"]
     Worker -->|Parse + Chunk| Worker
-    Worker -->|Generate embeddings| Gemini["✨ Gemini / OpenAI"]
-    Gemini -->|Vectors| Qdrant[("🎯 Qdrant\n(Vector DB)")]
-    Worker -->|Classify genre| Gemini
+    Worker -->|Generate embeddings| LLM["Gemini / OpenAI"]
+    LLM -->|Vectors| Qdrant[("Qdrant\nVector DB")]
+    Worker -->|Classify genre| LLM
     Worker -->|Update status + genre| PG
     API -->|Vector similarity search| Qdrant
-    API -->|LLM synthesis| Gemini
-    Gemini -->|Synthesized answer| FE
-    Worker -->|NER triplets [planned]| Neo4j[("🔗 Neo4j\n(Graph DB)")]
+    API -->|LLM synthesis| LLM
+    LLM -->|Synthesized answer| FE
+    Worker -.->|NER triplets, planned| Neo4j[("Neo4j\nGraph DB")]
 ```
 
 ---
