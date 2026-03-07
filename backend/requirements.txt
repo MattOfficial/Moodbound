@@ -5,3 +5,8 @@ alembic
 psycopg2-binary
 python-multipart
 python-dotenv
+arq
+redis
+llama-index
+llama-index-llms-openai
+llama-index-embeddings-openai
