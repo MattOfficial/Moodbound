@@ -21,6 +21,22 @@ app.add_middleware(
 app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 
+import os
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Vibe Novel App API!", "status": "healthy"}
+
+@app.get("/api/system/status")
+def get_system_status():
+    provider = os.getenv("AI_PROVIDER", "gemini").lower()
+    if provider == "openai":
+        router_display = "OpenAI"
+    else:
+        router_display = "Gemini"
+        
+    return {
+        "status": "Online",
+        "agent_router": router_display,
+        "vector_db": "Qdrant"
+    }
