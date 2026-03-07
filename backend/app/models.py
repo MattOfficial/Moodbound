@@ -11,6 +11,8 @@ class Document(Base):
     filename = Column(String, index=True, nullable=False)
     content_type = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
-    status = Column(String, default="Pending") # Pending, Processing, Completed, Failed
+    status = Column(String, default="Pending")  # Pending, Processing, Completed, Failed
+    genre = Column(String, default="Uncategorized")  # e.g. Fantasy, Sci-Fi, Romance...
     created_at = Column(DateTime, default=datetime.utcnow)
+
 

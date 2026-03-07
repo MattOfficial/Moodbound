@@ -17,8 +17,6 @@
   body {
     background-color: var(--bg-base);
     color: var(--text-main);
-    overflow: hidden;
-    height: 100vh;
     @apply font-sans;
   }
 }

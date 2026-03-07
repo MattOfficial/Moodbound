@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from arq import create_pool
 import os
 import shutil
+import uuid
 
 from ..database import get_db
 from ..models import Document
@@ -15,7 +16,7 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/")
-async def upload_document(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_document(file: UploadFile = File(...), genre: str = "Uncategorized", db: Session = Depends(get_db)):
     """
     Endpoint to receive a novel file upload.
     It saves the file locally and creates a 'Pending' record in PostgreSQL.
@@ -41,7 +42,8 @@ async def upload_document(file: UploadFile = File(...), db: Session = Depends(ge
         filename=file.filename,
         content_type=file.content_type,
         file_path=file_path,
-        status="Pending"
+        status="Pending",
+        genre=genre
     )
     
     db.add(new_doc)
@@ -64,3 +66,45 @@ async def upload_document(file: UploadFile = File(...), db: Session = Depends(ge
         "document_id": new_doc.id,
         "status": new_doc.status
     }
+
+
+@router.get("/")
+def list_documents(db: Session = Depends(get_db)):
+    """
+    Returns a list of all uploaded documents from PostgreSQL.
+    Used by the Library page to show real-time processing status.
+    """
+    docs = db.query(Document).order_by(Document.created_at.desc()).all()
+    return [
+        {
+            "id": str(doc.id),
+            "filename": doc.filename,
+            "status": doc.status,
+            "genre": doc.genre or "Uncategorized",
+            "created_at": doc.created_at.isoformat() if doc.created_at else None,
+        }
+        for doc in docs
+    ]
+
+
+@router.delete("/{document_id}")
+def delete_document(document_id: str, db: Session = Depends(get_db)):
+    """
+    Deletes a document record from PostgreSQL and removes the file from disk.
+    """
+    try:
+        doc_uuid = uuid.UUID(document_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid document ID format.")
+
+    doc = db.query(Document).filter(Document.id == doc_uuid).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    # Remove from disk if it still exists
+    if doc.file_path and os.path.exists(doc.file_path):
+        os.remove(doc.file_path)
+
+    db.delete(doc)
+    db.commit()
+    return {"message": f"Document '{doc.filename}' deleted successfully."}

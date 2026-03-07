@@ -81,37 +81,48 @@ export const Home: React.FC = () => {
 
                 {/* Results Stream */}
                 {result && !isLoading && (
-                    <div className="mt-12 w-full max-w-4xl text-left animate-[slideUp_0.8s_ease-out_forwards]">
+                    <div className="mt-12 w-full max-w-4xl text-left overflow-y-auto max-h-[60vh] pr-1 pb-2 animate-[slideUp_0.8s_ease-out_forwards]">
                         <div className="glass-card mb-8">
                             <h2 className="text-sm font-bold tracking-widest text-[var(--text-muted)] uppercase mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7]" /> AI Synthesis
                             </h2>
-                            <div className="prose prose-invert max-w-none text-lg leading-relaxed">
-                                {result.answer.split('\n').map((para, i) => (
-                                    <p key={i} className="mb-4 last:mb-0">{para}</p>
-                                ))}
-                            </div>
+                            {result.answer && result.answer.trim() !== 'Empty Response' ? (
+                                <div className="prose prose-invert max-w-none text-lg leading-relaxed">
+                                    {result.answer.split('\n').map((para, i) => (
+                                        <p key={i} className="mb-4 last:mb-0">{para}</p>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-3 py-8 text-[var(--text-muted)]">
+                                    <BookOpen size={36} className="opacity-30" />
+                                    <p className="text-center">No matching passages found. Try uploading more novels via the <span className="text-purple-400 cursor-pointer underline underline-offset-2" onClick={() => window.location.href = '/library'}>Library</span>.</p>
+                                </div>
+                            )}
                         </div>
 
-                        <h3 className="text-sm font-bold tracking-widest text-[var(--text-muted)] uppercase mb-4 ml-2">Source Excerpts</h3>
-                        <div className="grid gap-4">
-                            {result.sources.map((source, i) => (
-                                <div key={i} className="glass-card bg-white/[0.02] hover:bg-white/[0.04] transition-colors group">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="flex items-center gap-2 text-purple-400">
-                                            <BookOpen size={16} />
-                                            <span className="font-semibold text-sm">{source.filename}</span>
+                        {result.sources && result.sources.length > 0 && (
+                            <>
+                                <h3 className="text-sm font-bold tracking-widest text-[var(--text-muted)] uppercase mb-4 ml-2">Source Excerpts</h3>
+                                <div className="grid gap-4">
+                                    {result.sources.map((source, i) => (
+                                        <div key={i} className="glass-card bg-white/[0.02] hover:bg-white/[0.04] transition-colors group">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex items-center gap-2 text-purple-400">
+                                                    <BookOpen size={16} />
+                                                    <span className="font-semibold text-sm">{source.filename}</span>
+                                                </div>
+                                                <span className="text-xs font-mono text-white/40 bg-white/5 px-2 py-1 rounded-md">
+                                                    Score: {source.score.toFixed(3)}
+                                                </span>
+                                            </div>
+                                            <p className="text-white/70 text-sm leading-relaxed italic border-l-2 border-purple-500/30 pl-4 py-1">
+                                                "{source.text}"
+                                            </p>
                                         </div>
-                                        <span className="text-xs font-mono text-white/40 bg-white/5 px-2 py-1 rounded-md">
-                                            Score: {source.score.toFixed(3)}
-                                        </span>
-                                    </div>
-                                    <p className="text-white/70 text-sm leading-relaxed italic border-l-2 border-purple-500/30 pl-4 py-1">
-                                        "{source.text}"
-                                    </p>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </>
+                        )}
                     </div>
                 )}
             </main>
