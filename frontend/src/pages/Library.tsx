@@ -4,19 +4,6 @@ import { Navbar } from '../components/Navbar';
 import { uploadDocument, getDocuments, deleteDocument, type DocumentRecord } from '../api/client';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle, Clock, Loader2, Trash2, BookOpen, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
 
-// ─── Available genres for manual selection ────────────────────────────────────
-const GENRES = [
-    'Uncategorized',
-    'Fantasy',
-    'Sci-Fi',
-    'Romance',
-    'Mystery / Thriller',
-    'Horror',
-    'Historical Fiction',
-    'Literary Fiction',
-    'Adventure',
-    'Non-Fiction',
-];
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 const StatusBadge: React.FC<{ status: DocumentRecord['status'] }> = ({ status }) => {
@@ -101,7 +88,6 @@ export const Library: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [uploadMessage, setUploadMessage] = useState('');
-    const [selectedGenre, setSelectedGenre] = useState('Uncategorized');
     const [documents, setDocuments] = useState<DocumentRecord[]>([]);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -152,7 +138,7 @@ export const Library: React.FC = () => {
         setIsUploading(true);
         setUploadStatus('idle');
         try {
-            await uploadDocument(file, selectedGenre);
+            await uploadDocument(file);
             setUploadStatus('success');
             setUploadMessage(`"${file.name}" uploaded and queued for vectorization!`);
             await fetchDocuments();
@@ -164,7 +150,7 @@ export const Library: React.FC = () => {
 
     const onDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
     const onDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); }, []);
-    const onDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }, [selectedGenre]);
+    const onDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }, []);
     const onFileInput = (e: React.ChangeEvent<HTMLInputElement>) => handleFiles(e.target.files);
 
     const formatDate = (iso: string) =>
@@ -210,19 +196,6 @@ export const Library: React.FC = () => {
                                     <p className="text-[var(--text-muted)] mt-1 text-sm">or click to browse — PDF, EPUB, TXT</p>
                                 </div>
                             </label>
-
-                            {/* Genre Picker */}
-                            <div className="flex items-center gap-3 mt-2">
-                                <label className="text-sm text-[var(--text-muted)]">Genre:</label>
-                                <select
-                                    value={selectedGenre}
-                                    onChange={e => setSelectedGenre(e.target.value)}
-                                    onClick={e => e.stopPropagation()}
-                                    className="bg-white/5 border border-white/15 text-white text-sm rounded-xl px-4 py-2 outline-none focus:border-purple-500/50 cursor-pointer"
-                                >
-                                    {GENRES.map(g => <option key={g} value={g} className="bg-[#030014]">{g}</option>)}
-                                </select>
-                            </div>
                         </>
                     )}
                 </div>

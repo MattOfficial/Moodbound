@@ -13,11 +13,41 @@ from llama_index.core.settings import Settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Fixed genre labels the LLM must choose from
+GENRE_LABELS = [
+    "Fantasy", "Sci-Fi", "Romance", "Mystery",
+    "Thriller", "Horror", "Historical Fiction",
+    "Literary Fiction", "Adventure", "Non-Fiction",
+]
+
+async def _classify_genre(sample_text: str) -> str:
+    """
+    Calls the configured LLM with a constrained prompt to classify a novel's genre.
+    Returns one of the GENRE_LABELS, or 'Uncategorized' on failure.
+    """
+    label_list = ", ".join(GENRE_LABELS)
+    prompt = (
+        f"You are a literary genre classifier. Based on the following excerpt from a novel, "
+        f"classify it into exactly ONE of these genres: {label_list}.\n\n"
+        f"Respond with ONLY the genre name and nothing else.\n\n"
+        f"EXCERPT:\n{sample_text[:2000]}"
+    )
+    try:
+        response = await asyncio.to_thread(Settings.llm.complete, prompt)
+        raw = str(response).strip()
+        # Find the first matching label (case-insensitive)
+        for label in GENRE_LABELS:
+            if label.lower() in raw.lower():
+                return label
+        logger.warning(f"LLM returned unrecognised genre '{raw}' — falling back to Uncategorized.")
+    except Exception as e:
+        logger.warning(f"Genre classification failed: {e}")
+    return "Uncategorized"
+
+
 async def process_document(ctx, document_id: str):
     """
-    This is the background task that runs asynchronously.
-    It takes a document ID, parses it, chunks it, and generates vector embeddings
-    which are stored in Qdrant.
+    Background task: parses, chunks, vectorizes, and auto-categorizes a document.
     """
     db: Session = SessionLocal()
     
@@ -32,29 +62,28 @@ async def process_document(ctx, document_id: str):
         doc.status = "Processing"
         db.commit()
 
-        # 2. LlamaIndex Narrative Chunking
+        # 2. Narrative Chunking
         nodes = parse_and_chunk_document(doc.file_path, doc.filename)
         
-        # 3. Configure Embeddings & Vector Store
-        # Dynamically load the correct AI provider based on our .env config
+        # 3. Configure AI provider
         from app.ai_config import configure_ai_settings
         configure_ai_settings()
         
-        logger.info("Connecting to Qdrant and initializing StorageContext...")
+        # 4. Generate Embeddings → Qdrant
+        logger.info(f"Generating vectors for {len(nodes)} chunks...")
         vector_store = get_vector_store()
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
+        VectorStoreIndex(nodes, storage_context=storage_context)
+
+        # 5. AI Genre Classification
+        if nodes and doc.genre in (None, "Uncategorized"):
+            sample_text = nodes[0].text
+            logger.info("Running AI genre classification...")
+            doc.genre = await _classify_genre(sample_text)
+            logger.info(f"Genre classified as: {doc.genre}")
         
-        # 4. Generate Embeddings and Save to Qdrant
-        # This step sends the nodes to OpenAI or Gemini to get coordinates, then saves them to Qdrant.
-        logger.info(f"Generating vectors for {len(nodes)} chunks. This may take a moment...")
-        index = VectorStoreIndex(
-            nodes, 
-            storage_context=storage_context,
-            # We pass show_progress=True but we might not see it gracefully in background logs
-        )
-        
-        # 5. Mark as Completed
-        logger.info(f"Successfully vectorized and stored {doc.filename} in Qdrant.")
+        # 6. Mark Completed
+        logger.info(f"Successfully processed '{doc.filename}' → genre: {doc.genre}")
         doc.status = "Completed"
         db.commit()
         
@@ -65,3 +94,4 @@ async def process_document(ctx, document_id: str):
             db.commit()
     finally:
         db.close()
+

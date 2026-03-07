@@ -14,3 +14,5 @@ llama-index-llms-gemini
 llama-index-embeddings-gemini
 qdrant-client
 llama-index-vector-stores-qdrant
+EbookLib
+html2text

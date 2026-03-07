@@ -1,3 +1,6 @@
 # env files
 .env.local
 .env
+
+# uploaded novel files (raw files are ephemeral — content lives in Qdrant)
+backend/uploads/
