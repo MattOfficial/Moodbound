@@ -13,7 +13,7 @@ class WorkerSettings:
     
     # Optional lifecycle hooks
     async def on_startup(ctx):
-        logging.info("Vibe Novel Background Worker is starting up...")
+        logging.info("Moodbound Background Worker is starting up...")
 
     async def on_shutdown(ctx):
-        logging.info("Vibe Novel Background Worker is shutting down...")
+        logging.info("Moodbound Background Worker is shutting down...")

@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📚 Vibe Novel Engine
+# 🎧 Moodbound
 
 **An AI-powered reading companion that understands the *mood* of your novels.**
 
@@ -18,7 +18,7 @@
 
 ## 🎯 What is this?
 
-Vibe Novel Engine is a full-stack AI application that goes far beyond a traditional search engine. Instead of matching keywords, it understands the **semantic meaning, mood, and emotional context** of your novel collection using vector embeddings and Retrieval-Augmented Generation (RAG).
+Moodbound is a full-stack AI application that goes far beyond a traditional search engine. Instead of matching keywords, it understands the **semantic meaning, mood, and emotional context** of your novel collection using vector embeddings and Retrieval-Augmented Generation (RAG).
 
 Upload a novel. Ask about a vibe. Get back the exact scene, excerpt, and AI-synthesized explanation — with source attribution.
 
@@ -94,8 +94,8 @@ graph TD
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/your-username/light-vibe-novels.git
-cd light-vibe-novels
+git clone https://github.com/your-username/moodbound.git
+cd moodbound
 cp .env.example .env
 # Edit .env and add your API key
 ```

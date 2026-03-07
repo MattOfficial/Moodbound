@@ -7,7 +7,7 @@ from .api import documents, search
 # Later, we will rely entirely on Alembic for migrations.)
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Vibe Novel App API")
+app = FastAPI(title="Moodbound API")
 
 # Configure CORS so our React frontend can talk to us
 app.add_middleware(
@@ -25,7 +25,7 @@ import os
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Vibe Novel App API!", "status": "healthy"}
+    return {"message": "Welcome to the Moodbound API!", "status": "healthy"}
 
 @app.get("/api/system/status")
 def get_system_status():

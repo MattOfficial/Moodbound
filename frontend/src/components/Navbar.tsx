@@ -13,7 +13,7 @@ export const Navbar: React.FC = () => {
                     <div className="absolute inset-[-2px] rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 blur-sm opacity-60 -z-10" />
                 </div>
                 <div>
-                    Vibe <span className="bg-gradient-to-r from-white to-purple-500 bg-clip-text text-transparent">Novel</span>
+                    Mood<span className="bg-gradient-to-r from-white to-purple-500 bg-clip-text text-transparent">bound</span>
                 </div>
             </Link>
 
