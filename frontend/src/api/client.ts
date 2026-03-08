@@ -61,3 +61,14 @@ export const uploadDocument = async (file: File, genre: string = 'Uncategorized'
     });
     return response.data;
 };
+
+export interface GraphResponse {
+    nodes: Array<{ id: string; label: string }>;
+    edges: Array<{ source: string; target: string; label: string; color?: string }>;
+    message?: string;
+}
+
+export const getGraph = async (documentId: string): Promise<GraphResponse> => {
+    const response = await apiClient.get(`/graph/${documentId}`);
+    return response.data;
+};

@@ -6,6 +6,8 @@ from app.database import SessionLocal
 from app.models import Document
 from app.tasks.parsing import parse_and_chunk_document
 from app.vector_store import get_vector_store
+from app.graph_store import write_triplets
+import json
 
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.core.settings import Settings
@@ -45,6 +47,36 @@ async def _classify_genre(sample_text: str) -> str:
     return "Uncategorized"
 
 
+async def _extract_relationships(sample_text: str) -> list[dict]:
+    """
+    Calls the configured LLM to extract character relationship triplets.
+    """
+    prompt = (
+        "You are an expert at Named Entity Recognition. Extract the key character relationships "
+        "from the following excerpt of a novel. Ensure you extract a comprehensive map, capturing "
+        "at least 15 to 25 crucial relationships between characters.\n\n"
+        "Return ONLY a JSON list of objects with exactly these keys: "
+        "'source' (character name), 'relationship' (verb/label like 'betrayed', 'loves', 'friend', 'enemy', 'mentor', 'family'), "
+        "and 'target' (character name).\n\n"
+        f"EXCERPT:\n{sample_text[:15000]}\n\n"
+        "RESPONSE FORMAT:\n[{\"source\": \"A\", \"relationship\": \"rel\", \"target\": \"B\"}]"
+    )
+    try:
+        response = await asyncio.to_thread(Settings.llm.complete, prompt)
+        raw = str(response).strip()
+        # Clean markdown code block if present
+        if raw.startswith("```json"):
+            raw = raw[7:]
+        elif raw.startswith("```"):
+            raw = raw[3:]
+        if raw.endswith("```"):
+            raw = raw[:-3]
+        return json.loads(raw.strip())
+    except Exception as e:
+        logger.warning(f"Failed to extract relationships: {e}")
+        return []
+
+
 async def process_document(ctx, document_id: str):
     """
     Background task: parses, chunks, vectorizes, and auto-categorizes a document.
@@ -81,8 +113,42 @@ async def process_document(ctx, document_id: str):
             logger.info("Running AI genre classification...")
             doc.genre = await _classify_genre(sample_text)
             logger.info(f"Genre classified as: {doc.genre}")
+        # 6. NER Graph Extraction — Concurrent streaming pattern
+        if nodes:
+            logger.info("Running NER relationship extraction (concurrent)...")
+            
+            # Sample 20 chunks evenly distributed across the entire novel
+            TOTAL_SAMPLES = 20
+            CHUNKS_PER_BATCH = 2  # ~5k characters per call – fast and timeout-safe
+            step_size = max(1, len(nodes) // TOTAL_SAMPLES)
+            sampled_nodes = nodes[::step_size][:TOTAL_SAMPLES]
+            
+            # Build individual batch texts
+            batches = []
+            for i in range(0, len(sampled_nodes), CHUNKS_PER_BATCH):
+                batch = sampled_nodes[i : i + CHUNKS_PER_BATCH]
+                batches.append("\n\n...[SCENE BREAK]...\n\n".join(n.text for n in batch))
+            
+            logger.info(f"Firing {len(batches)} concurrent NER batches...")
+            
+            # Launch all extraction calls simultaneously
+            results = await asyncio.gather(
+                *[_extract_relationships(text) for text in batches],
+                return_exceptions=True,
+            )
+            
+            # Write each batch's results to Neo4j as they complete
+            total_written = 0
+            for idx, triplets in enumerate(results):
+                if isinstance(triplets, Exception) or not triplets:
+                    continue
+                write_triplets(document_id, triplets)
+                total_written += len(triplets)
+                logger.info(f"Batch {idx + 1}: wrote {len(triplets)} triplets to Neo4j.")
+            
+            logger.info(f"NER complete — {total_written} total relationship triplets written.")
         
-        # 6. Mark Completed
+        # 7. Mark Completed
         logger.info(f"Successfully processed '{doc.filename}' → genre: {doc.genre}")
         doc.status = "Completed"
         db.commit()

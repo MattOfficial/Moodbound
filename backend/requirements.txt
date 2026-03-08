@@ -16,3 +16,4 @@ qdrant-client
 llama-index-vector-stores-qdrant
 EbookLib
 html2text
+neo4j

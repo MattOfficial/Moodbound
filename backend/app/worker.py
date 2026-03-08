@@ -10,6 +10,7 @@ logging.basicConfig(level=logging.INFO)
 class WorkerSettings:
     functions = [process_document] # Register the functions we want to be able to execute asynchronously
     redis_settings = redis_settings # Tell the worker how to connect to Redis
+    job_timeout = 900  # Increase to 15 minutes to allow for batched LLM extraction
     
     # Optional lifecycle hooks
     async def on_startup(ctx):

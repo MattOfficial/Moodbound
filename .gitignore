@@ -4,3 +4,65 @@
 
 # uploaded novel files (raw files are ephemeral — content lives in Qdrant)
 backend/uploads/
+
+########################################
+# Python / FastAPI
+########################################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.env
+.venv/
+venv/
+ENV/
+
+########################################
+# Node / React / Vite
+########################################
+node_modules/
+dist/
+build/
+.vite/
+.vite-cache/
+.eslintcache
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+########################################
+# TypeScript
+########################################
+*.tsbuildinfo
+
+########################################
+# Frontend tooling
+########################################
+coverage/
+.storybook/
+.cache/
+
+########################################
+# OS / Editor noise
+########################################
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+########################################
+# Docker
+########################################
+docker-compose.override.yml
+
+########################################
+# Misc
+########################################
+*.local

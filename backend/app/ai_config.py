@@ -25,7 +25,7 @@ def configure_ai_settings():
         llm_model_name = os.getenv("FAST_LLM_MODEL", "gpt-4o-mini")
         
         Settings.embed_model = OpenAIEmbedding(model=embed_model_name)
-        Settings.llm = OpenAI(model=llm_model_name, temperature=0.7)
+        Settings.llm = OpenAI(model=llm_model_name, temperature=0.7, timeout=120.0)
         logger.info(f"Configured LlamaIndex to use OpenAI (Embed: {embed_model_name}, LLM: {llm_model_name})")
         
     elif AI_PROVIDER == "gemini":

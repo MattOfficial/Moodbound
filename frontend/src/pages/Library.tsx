@@ -1,8 +1,9 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { BackgroundEffect } from '../components/BackgroundEffect';
 import { Navbar } from '../components/Navbar';
+import { Link } from 'react-router-dom';
 import { uploadDocument, getDocuments, deleteDocument, type DocumentRecord } from '../api/client';
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, Clock, Loader2, Trash2, BookOpen, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, AlertCircle, Clock, Loader2, Trash2, BookOpen, ChevronDown, ChevronRight, FolderOpen, Network } from 'lucide-react';
 
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -63,6 +64,16 @@ const GenreSection: React.FC<{
                                 <p className="text-xs text-[var(--text-muted)] mt-0.5 font-mono">{formatDate(doc.created_at)}</p>
                             </div>
                             <StatusBadge status={doc.status} />
+
+                            {['Completed', 'Processing'].includes(doc.status) && (
+                                <Link
+                                    to={`/graph/${doc.id}`}
+                                    className="ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 hover:text-white transition-colors flex items-center gap-1.5 shrink-0 opacity-0 group-hover/row:opacity-100"
+                                >
+                                    <Network size={14} /> Graph
+                                </Link>
+                            )}
+
                             <button
                                 onClick={() => onDelete(doc)}
                                 disabled={deletingId === doc.id}

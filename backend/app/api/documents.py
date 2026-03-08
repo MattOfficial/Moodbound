@@ -8,6 +8,7 @@ import uuid
 from ..database import get_db
 from ..models import Document
 from ..redis_config import redis_settings
+from ..graph_store import delete_graph
 
 router = APIRouter()
 
@@ -104,6 +105,12 @@ def delete_document(document_id: str, db: Session = Depends(get_db)):
     # Remove from disk if it still exists
     if doc.file_path and os.path.exists(doc.file_path):
         os.remove(doc.file_path)
+
+    # Cascading delete for Neo4j entities
+    try:
+        delete_graph(str(doc.id))
+    except Exception as e:
+        print(f"Error deleting graph data: {e}")
 
     db.delete(doc)
     db.commit()

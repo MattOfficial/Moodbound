@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .api import documents, search
+from .api import documents, search, graph
 
 # Create database tables (For MVP, we'll let SQLAlchemy create them if they don't exist.
 # Later, we will rely entirely on Alembic for migrations.)
@@ -20,6 +20,7 @@ app.add_middleware(
 
 app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
+app.include_router(graph.router, prefix="/api/graph", tags=["graph"])
 
 import os
 
