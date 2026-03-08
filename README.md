@@ -159,6 +159,12 @@ After every document is ingested and vectorized, the LLM reads the first chunk a
 ### Decoupled AI Architecture
 RAG models historically tie embeddings and synthesis to the same provider. We decoupled this: you can explicitly define `provider/model` mappings in your `.env`. This allows us to use **DeepSeek V3** exclusively for narrative intelligence and NER relationship generation (which requires heavy token output for cheap), while using **OpenAI embeddings** for precision Qdrant indexing.
 
+### Hybrid Search (Reciprocal Rank Fusion)
+To solve the hallucination problem inherent in dense vector "vibe matching", Moodbound natively blends **BM25 Sparse Keyword** searches alongside its Qdrant dense embeddings. When a novel is ingested, both indices are built in parallel using `fastembed`. During retrieval, LlamaIndex mathematically merges both results with an `alpha=0.5` weighting, guaranteeing that exact-character nouns bubble to the absolute top of the results while preserving semantic meaning.
+
+### Canvas WebGL Knowledge Graph
+Extracting the Neo4j relationships is only half the battle. Visualizing 500+ nodes in the DOM natively crashes Chrome. We bypassed the DOM entirely and migrated the `/graph/:documentId` UI to a pure **HTML5 Canvas WebGL** engine using `react-force-graph-2d`. We intercept the draw loop to natively render Obsidian-style glowing character connections while pushing all `d3-force` layout physics to a background Web Worker to preserve a locked 60 FPS UI thread.
+
 ```mermaid
 graph LR
     A[FastAPI Engine] --> B{AI Router}
@@ -213,7 +219,7 @@ sequenceDiagram
 
 ## 🗺️ Roadmap
 
-- [ ] **Hybrid Search (Reciprocal Rank Fusion)** — combine dense + sparse BM25 retrieval
+- [x] **Hybrid Search (Reciprocal Rank Fusion)** — combined dense + sparse BM25 retrieval
 - [ ] **Vibe-Reactive UI** — color palette and animations shift to match the emotional tone of results
 - [ ] **GraphRAG Queries** — route relationship questions to Neo4j instead of Qdrant
 - [ ] **Streaming Chat Responses** — Stream text blocks live to UI to hide API latency
