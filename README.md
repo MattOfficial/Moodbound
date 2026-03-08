@@ -9,6 +9,7 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
 [![Gemini](https://img.shields.io/badge/Gemini-API-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev)
 [![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?style=flat&logo=openai&logoColor=white)](https://platform.openai.com)
+[![DeepSeek](https://img.shields.io/badge/DeepSeek-API-4D6BFE?style=flat&logo=deepseek&logoColor=white)](https://deepseek.com)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com)
 
 > *"Find me a scene with a melancholic, rainy-day vibe."* — this app actually answers that.
@@ -35,9 +36,9 @@ Upload a novel. Ask about a vibe. Get back the exact scene, excerpt, and AI-synt
 | ✂️ **Narrative Chunking** | ✅ Complete | Splits text by paragraph/scene boundaries, not blind tokens |
 | 🗂️ **AI Auto-Categorization** | ✅ Complete | LLM classifies genre automatically on ingest |
 | 📚 **Library Management** | ✅ Complete | View/delete books with real-time processing status |
-| 🔌 **Modular AI Providers** | ✅ Complete | Swap Gemini ↔ OpenAI via a single `.env` variable |
-| 🖥️ **Live System Status** | ✅ Complete | Dashboard shows active AI provider from the API |
-| 🌐 **Knowledge Graph** | 🔜 Planned | Neo4j character relationship graph with React Flow |
+| 🔌 **Decoupled AI Providers** | ✅ Complete | Mix/match LLMs and Embeddings (`deepseek` + `gemini`) |
+| 🌐 **Knowledge Graph** | ✅ Complete | Neo4j character relationship graph with d3-force clustering |
+| ♻️ **Cascading DB Deletes** | ✅ Complete | Deleting a novel cleans Postgres, Qdrant, and Neo4j |
 | 🎨 **Vibe-Reactive UI** | 🔜 Planned | Theme transitions based on the mood of search results |
 | 🔍 **Hybrid Search (RRF)** | 🔜 Planned | Combine dense vectors + BM25 sparse search |
 
@@ -75,7 +76,7 @@ graph TD
 | **Styling** | Tailwind CSS | Dynamic, vibe-reactive styling |
 | **Backend** | Python + FastAPI | REST API & orchestration |
 | **AI Orchestration** | LlamaIndex | RAG pipeline, query engine |
-| **LLM / Embeddings** | Google Gemini (or OpenAI) | Synthesis, embeddings, classification |
+| **LLM / Embeddings** | DeepSeek / OpenAI / Gemini | Synthesis, embeddings, NER extraction |
 | **Vector DB** | Qdrant | Semantic similarity search |
 | **Graph DB** | Neo4j | Character relationship storage (planned) |
 | **SQL DB** | PostgreSQL | Document metadata & status |
@@ -90,7 +91,7 @@ graph TD
 - Docker & Docker Compose
 - Python 3.11+
 - Node.js 20+
-- A [Google AI API key](https://ai.google.dev) (or OpenAI key)
+- A [DeepSeek API key](https://platform.deepseek.com/api_keys), [OpenAI API key](https://platform.openai.com/api-keys), or [Google AI API key](https://ai.google.dev)
 
 ### 1. Clone and configure
 
@@ -134,24 +135,13 @@ Open [http://localhost:5173](http://localhost:5173) 🎉
 
 ## ⚙️ Configuration (`.env`)
 
-```env
-# ── AI Provider ─────────────────────────────────────────────────────
-AI_PROVIDER=gemini           # or: openai
+Duplicate the `.env.example` file to create your local `.env` variable map.
 
-# ── Gemini (when AI_PROVIDER=gemini) ────────────────────────────────
-GOOGLE_API_KEY=your_key_here
-EMBEDDING_MODEL=models/text-embedding-004
-FAST_LLM_MODEL=models/gemini-2.0-flash
-THINKING_LLM_MODEL=models/gemini-2.0-flash-thinking-exp
-
-# ── OpenAI (when AI_PROVIDER=openai) ────────────────────────────────
-OPENAI_API_KEY=your_key_here
-# EMBEDDING_MODEL=text-embedding-3-small
-# FAST_LLM_MODEL=gpt-4o-mini
-# THINKING_LLM_MODEL=o3-mini
+```bash
+cp .env.example .env
 ```
 
-Switching AI providers is as simple as changing one variable — no code changes required.
+By decoupling the AI syntax via the config template, developers can mix and match providers natively — pairing DeepSeek's incredibly low-cost, high-speed API for generation with OpenAI/Gemini's highly granular embedding models.
 
 ---
 
@@ -166,21 +156,67 @@ Queries are intercepted by a router prompt before retrieval. The LLM decides whe
 ### AI Auto-Categorization
 After every document is ingested and vectorized, the LLM reads the first chunk and classifies the genre using a constrained prompt — zero user effort, near-zero token cost.
 
-### Modular AI Provider System
-A single `AI_PROVIDER` environment variable determines whether the entire embedding + synthesis stack uses Gemini or OpenAI. The abstraction is clean enough that adding a new provider (e.g. Anthropic Claude, local Ollama) requires only a few lines in `ai_config.py`.
+### Decoupled AI Architecture
+RAG models historically tie embeddings and synthesis to the same provider. We decoupled this: you can explicitly define `provider/model` mappings in your `.env`. This allows us to use **DeepSeek V3** exclusively for narrative intelligence and NER relationship generation (which requires heavy token output for cheap), while using **OpenAI embeddings** for precision Qdrant indexing.
+
+```mermaid
+graph LR
+    A[FastAPI Engine] --> B{AI Router}
+    B -->|Settings.embed_model| C[Gemini / OpenAI]
+    C -->|Float Vectors| D[(Qdrant DB)]
+    B -->|Settings.llm| E[DeepSeek V3]
+    E -->|Text & JSON| F[RAG Synthesis / NER]
+```
+
+### Concurrent Batched NER Extraction
+Extracting a Neo4j knowledge graph from a 150,000-word novel in one shot would fail every LLM's context window. Instead, Moodbound slices the novel into overlapping sequential blocks, dispatches 10 parallel asynchronous routines with `asyncio.gather()`, and concurrently extracts relationships to dramatically reduce wait times from hours to roughly 35 seconds.
+
+```mermaid
+graph TD
+    A["150k Word Novel"] -->|"SentenceSplitter"| B["100+ Overlapping Chunks"]
+    B --> C{"asyncio.gather"}
+    C -->|"Batch 1"| D["DeepSeek API"]
+    C -->|"Batch 2"| E["DeepSeek API"]
+    C -->|"Batch n..."| F["DeepSeek API"]
+    D --> G[("Neo4j Entities")]
+    E --> G
+    F --> G
+```
 
 ### Async Ingestion Pipeline
-File upload returns instantly. Heavy work (PDF parsing, LLM embedding calls, genre classification) is dispatched to Redis-backed ARQ workers. The frontend polls for status updates every 5 seconds, showing live `Pending → Processing → Completed` transitions.
+File upload returns instantly. Heavy work (PDF parsing, LLM embedding calls, batched graph extraction) is dispatched to Redis-backed ARQ workers. The frontend polls for status updates every 5 seconds, showing live `Loading → Parsing → Classifying → Extracting → Completed` UI transitions.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant FA as FastAPI
+    participant R as Redis
+    participant W as ARQ Worker
+    
+    U->>FA: Upload Novel (PDF/EPUB)
+    FA->>R: Enqueue job_id
+    FA-->>U: Return 200 OK (Pending)
+    
+    W->>R: Dequeue job
+    W->>W: Parse Text
+    W->>W: Generate Embeddings (Qdrant)
+    W->>W: Batched NER Extraction (Neo4j)
+    
+    loop Every 5 Seconds
+        U->>FA: Poll Status
+        FA-->>U: Processing status & genre
+    end
+    W->>FA: Mark DB Completed
+```
 
 ---
 
 ## 🗺️ Roadmap
 
-- [ ] **Knowledge Graph Visualization** — D3.js/React Flow graph of character relationships extracted by NER
 - [ ] **Hybrid Search (Reciprocal Rank Fusion)** — combine dense + sparse BM25 retrieval
 - [ ] **Vibe-Reactive UI** — color palette and animations shift to match the emotional tone of results
 - [ ] **GraphRAG Queries** — route relationship questions to Neo4j instead of Qdrant
-- [ ] **Cascading Deletes** — removing a document prunes its Qdrant vectors and Neo4j entities
+- [ ] **Streaming Chat Responses** — Stream text blocks live to UI to hide API latency
 
 ---
 
