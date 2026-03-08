@@ -35,7 +35,7 @@ def get_system_status():
         router_display = "OpenAI"
     else:
         router_display = "Gemini"
-        
+
     return {
         "status": "Online",
         "agent_router": router_display,

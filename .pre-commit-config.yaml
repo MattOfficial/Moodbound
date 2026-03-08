@@ -1,0 +1,22 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0  # Use the latest stable release
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+    -   id: detect-private-key
+
+-   repo: local
+    hooks:
+    -   id: detect-api-keys
+        name: Detect leaked API Keys (OpenAI, Gemini, DeepSeek)
+        # Regex explanation:
+        # - AIza[0-9A-Za-z_-]{35} matches Google Gemini/GCP API Keys
+        # - sk-[a-zA-Z0-9]{32,} matches OpenAI standard and DeepSeek API keys
+        # - sk-proj-[a-zA-Z0-9_-]+ matches OpenAI Project-based keys
+        entry: (AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{32,}|sk-proj-[a-zA-Z0-9_-]+)
+        language: pygrep
+        types: [text]
+        exclude: ^(\.env\.example|README\.md)$

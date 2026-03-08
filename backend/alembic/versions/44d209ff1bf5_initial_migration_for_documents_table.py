@@ -1,7 +1,7 @@
 """Initial migration for documents table
 
 Revision ID: 44d209ff1bf5
-Revises: 
+Revises:
 Create Date: 2026-03-03 14:15:32.382315
 
 """

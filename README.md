@@ -192,16 +192,16 @@ sequenceDiagram
     participant FA as FastAPI
     participant R as Redis
     participant W as ARQ Worker
-    
+
     U->>FA: Upload Novel (PDF/EPUB)
     FA->>R: Enqueue job_id
     FA-->>U: Return 200 OK (Pending)
-    
+
     W->>R: Dequeue job
     W->>W: Parse Text
     W->>W: Generate Embeddings (Qdrant)
     W->>W: Batched NER Extraction (Neo4j)
-    
+
     loop Every 5 Seconds
         U->>FA: Poll Status
         FA-->>U: Processing status & genre

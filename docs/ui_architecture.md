@@ -4,18 +4,18 @@ This document serves as the primary context for future AI agents working on the 
 
 ## Core Aesthetic: Fun Personal Assistant
 
-The Vibe Novel App is not a boring enterprise RAG tool. It is a **Personal Assistant for Light Novels**. 
+The Vibe Novel App is not a boring enterprise RAG tool. It is a **Personal Assistant for Light Novels**.
 The visual language must constantly reinforce the feeling of magic, story, and dynamic interaction.
 
 ### Key Visual Pillars
-1. **Glassmorphism**: 
+1. **Glassmorphism**:
    - We use heavy frosted glass effects (`backdrop-filter: blur()`) to create depth and hierarchy.
    - Panels and cards should look like they are floating over a deep, living background.
    - Borders should be extremely subtle (e.g. `rgba(255, 255, 255, 0.08)` or similar) to separate panels from the background without feeling rigid.
-2. **Dynamic Mesh Gradients**: 
+2. **Dynamic Mesh Gradients**:
    - Avoid flat backgrounds. Use large, slow-moving CSS blurred elements (`filter: blur(120px)`) that float in the back layer.
    - The colors of these mesh elements (orbs/blobs) represent the AI's "brain" and the current "Vibe" of the application.
-3. **Interactive Canvas Details**: 
+3. **Interactive Canvas Details**:
    - A defining feature of the UI is a **Dot Matrix background animation** rendered on a `<canvas>` element.
    - This matrix should *not* be static. It must react to the user. For instance, creating rippling waves or light-novel-themed geometric disturbances around the mouse cursor to give the interface a tactile, "alive" feeling.
 

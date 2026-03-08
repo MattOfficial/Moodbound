@@ -14,5 +14,3 @@ class Document(Base):
     status = Column(String, default="Pending")  # Pending, Processing, Completed, Failed
     genre = Column(String, default="Uncategorized")  # e.g. Fantasy, Sci-Fi, Romance...
     created_at = Column(DateTime, default=datetime.utcnow)
-
-

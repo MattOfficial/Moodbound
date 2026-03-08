@@ -1,7 +1,7 @@
 # Project Specification: Vibe Novel App
 
 ## 1. Project Overview
-The "Vibe Novel App" is an advanced, AI-powered reading companion and knowledge extraction tool. It goes beyond simple keyword searches by utilizing a Retrieval-Augmented Generation (RAG) architecture to understand the semantic "vibe," mood, and deep lore of a user's novel collection. 
+The "Vibe Novel App" is an advanced, AI-powered reading companion and knowledge extraction tool. It goes beyond simple keyword searches by utilizing a Retrieval-Augmented Generation (RAG) architecture to understand the semantic "vibe," mood, and deep lore of a user's novel collection.
 
 ## 2. Core Features
 * **Vibe-Based Semantic Search:** Users can query the app using abstract moods (e.g., "Give me a quote with a melancholic, rainy-day vibe") and receive accurate excerpts, book titles, and character attributions.
@@ -11,7 +11,7 @@ The "Vibe Novel App" is an advanced, AI-powered reading companion and knowledge 
 * **Document Library & Upload:** Users can upload novel documents (PDF, EPUB, TXT) through a drag-and-drop interface. Uploaded documents are stored in the database, asynchronously processed through the AI ingestion pipeline, and their semantic content (embeddings, entities, relationships) is extracted and indexed. Users can view their library, track processing status in real-time, and manage their collection.
 
 ## 3. Technology Stack
-This stack is chosen to reflect modern, production-ready Full-Stack AI Development. 
+This stack is chosen to reflect modern, production-ready Full-Stack AI Development.
 
 **Frontend:**
 * React + TypeScript + Vite

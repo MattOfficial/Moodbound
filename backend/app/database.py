@@ -15,7 +15,7 @@ POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost") # Connect to localhost s
 
 SQLALCHEMY_DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
 
-# The Engine is the starting point for any SQLAlchemy application. 
+# The Engine is the starting point for any SQLAlchemy application.
 # It's a "home base" for the actual database and its DBAPI.
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 

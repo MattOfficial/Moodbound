@@ -15,7 +15,7 @@ def get_qdrant_client():
 
 def get_vector_store():
     """
-    Returns the LlamaIndex QdrantVectorStore abstraction, 
+    Returns the LlamaIndex QdrantVectorStore abstraction,
     wrapping our raw qdrant client. It automatically creates the collection
     if it doesn't already exist.
     """

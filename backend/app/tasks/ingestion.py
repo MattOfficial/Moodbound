@@ -82,7 +82,7 @@ async def process_document(ctx, document_id: str):
     Background task: parses, chunks, vectorizes, and auto-categorizes a document.
     """
     db: Session = SessionLocal()
-    
+
     try:
         # 1. Fetch the document
         doc = db.query(Document).filter(Document.id == document_id).first()
@@ -96,11 +96,11 @@ async def process_document(ctx, document_id: str):
 
         # 2. Narrative Chunking
         nodes = parse_and_chunk_document(doc.file_path, doc.filename)
-        
+
         # 3. Configure AI provider
         from app.ai_config import configure_ai_settings
         configure_ai_settings()
-        
+
         # 4. Generate Embeddings → Qdrant
         logger.info(f"Generating vectors for {len(nodes)} chunks...")
         vector_store = get_vector_store()
@@ -116,27 +116,27 @@ async def process_document(ctx, document_id: str):
         # 6. NER Graph Extraction — Concurrent streaming pattern
         if nodes:
             logger.info("Running NER relationship extraction (concurrent)...")
-            
+
             # Sample 20 chunks evenly distributed across the entire novel
             TOTAL_SAMPLES = 20
             CHUNKS_PER_BATCH = 2  # ~5k characters per call – fast and timeout-safe
             step_size = max(1, len(nodes) // TOTAL_SAMPLES)
             sampled_nodes = nodes[::step_size][:TOTAL_SAMPLES]
-            
+
             # Build individual batch texts
             batches = []
             for i in range(0, len(sampled_nodes), CHUNKS_PER_BATCH):
                 batch = sampled_nodes[i : i + CHUNKS_PER_BATCH]
                 batches.append("\n\n...[SCENE BREAK]...\n\n".join(n.text for n in batch))
-            
+
             logger.info(f"Firing {len(batches)} concurrent NER batches...")
-            
+
             # Launch all extraction calls simultaneously
             results = await asyncio.gather(
                 *[_extract_relationships(text) for text in batches],
                 return_exceptions=True,
             )
-            
+
             # Write each batch's results to Neo4j as they complete
             total_written = 0
             for idx, triplets in enumerate(results):
@@ -145,14 +145,14 @@ async def process_document(ctx, document_id: str):
                 write_triplets(document_id, triplets)
                 total_written += len(triplets)
                 logger.info(f"Batch {idx + 1}: wrote {len(triplets)} triplets to Neo4j.")
-            
+
             logger.info(f"NER complete — {total_written} total relationship triplets written.")
-        
+
         # 7. Mark Completed
         logger.info(f"Successfully processed '{doc.filename}' → genre: {doc.genre}")
         doc.status = "Completed"
         db.commit()
-        
+
     except Exception as e:
         logger.error(f"Failed to process document {document_id}: {e}")
         if 'doc' in locals() and doc:
@@ -160,4 +160,3 @@ async def process_document(ctx, document_id: str):
             db.commit()
     finally:
         db.close()
-

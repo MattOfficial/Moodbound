@@ -29,18 +29,18 @@ async def search_novels(search_query: SearchQuery):
         # 2. Attach to our existing Qdrant Vector Store
         logger.info(f"Received search query: {search_query.query}")
         vector_store = get_vector_store()
-        
+
         # Re-instantiate the index from the existing vector store
         index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
-        
+
         # 3. Create the Query Engine
         # similarity_top_k dictates how many chunks we retrieve. We will pull the Top 3 most relevant scenes.
         logger.info("Executing vector search against Qdrant...")
         query_engine = index.as_query_engine(similarity_top_k=3)
-        
+
         # 4. Execute the query and synthesize the response
         response = query_engine.query(search_query.query)
-        
+
         # 5. Format the return data for our beautiful React frontend
         source_nodes = []
         for node in response.source_nodes:

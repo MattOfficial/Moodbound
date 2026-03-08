@@ -31,7 +31,7 @@ def write_triplets(document_id: str, triplets: list[dict]):
     Nodes are MERGED (deduplicated per document), edges are created fresh.
     """
     driver = _get_driver()
-    
+
     def _create_triplets(tx):
         for t in triplets:
             source = t.get("source", "").strip()
@@ -53,7 +53,7 @@ def write_triplets(document_id: str, triplets: list[dict]):
 
     with driver.session() as session:
         session.execute_write(_create_triplets)
-        
+
     logger.info(f"Wrote {len(triplets)} triplets to Neo4j for document {document_id}")
 
 

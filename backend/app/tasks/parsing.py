@@ -29,14 +29,13 @@ def parse_and_chunk_document(file_path: str, filename: str):
     # ensuring the "Vibe" isn't lost at the border of a chunk.
     chunk_size = 1024
     chunk_overlap = 200
-    
+
     logger.info(f"Instantiating SentenceSplitter (size={chunk_size}, overlap={chunk_overlap})...")
     parser = SentenceSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    
+
     # Generate the actual chunks (nodes)
     nodes = parser.get_nodes_from_documents(documents)
-    
-    logger.info(f"Successfully generated {len(nodes)} distinct context chunks from {filename}!")
-    
-    return nodes
 
+    logger.info(f"Successfully generated {len(nodes)} distinct context chunks from {filename}!")
+
+    return nodes
