@@ -42,10 +42,32 @@ async def search_novels(search_query: SearchQuery):
             alpha=0.5
         )
 
-        # 4. Execute the query and synthesize the response
+        # 4. Extract "Vibe" category using global LLM
+        vibe_prompt = (
+            "Classify the emotional tone of the following search query into EXACTLY ONE of these categories: "
+            "[Melancholic, Serene, Dark, Tense, Romantic, Epic, Mysterious, Happy, Neutral]. "
+            "Output ONLY the category name and nothing else.\n\n"
+            f"Query: '{search_query.query}'"
+        )
+        try:
+            vibe_response = Settings.llm.complete(vibe_prompt)
+            # Clean up the response just in case the LLM adds punctuation
+            vibe_category = str(vibe_response).strip().strip("[]'\".,").capitalize()
+
+            # Validate against our list just to be safe
+            valid_vibes = ["Melancholic", "Serene", "Dark", "Tense", "Romantic", "Epic", "Mysterious", "Happy", "Neutral"]
+            if vibe_category not in valid_vibes:
+                vibe_category = "Neutral"
+        except Exception as e:
+            logger.warning(f"Failed to extract vibe, defaulting to Neutral: {e}")
+            vibe_category = "Neutral"
+
+        logger.info(f"Query classified as Vibe: {vibe_category}")
+
+        # 5. Execute the query and synthesize the response
         response = query_engine.query(search_query.query)
 
-        # 5. Format the return data for our beautiful React frontend
+        # 6. Format the return data for our beautiful React frontend
         source_nodes = []
         for node in response.source_nodes:
             source_nodes.append({
@@ -56,7 +78,8 @@ async def search_novels(search_query: SearchQuery):
 
         return {
             "answer": str(response),
-            "sources": source_nodes
+            "sources": source_nodes,
+            "vibe": vibe_category
         }
 
     except Exception as e:

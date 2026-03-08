@@ -5,11 +5,27 @@ import { SearchBar } from '../components/SearchBar';
 import { searchVibes, type SearchResponse, getSystemStatus, type SystemStatusResponse } from '../api/client';
 import { BookOpen } from 'lucide-react';
 
+type VibeCategory = "Melancholic" | "Serene" | "Dark" | "Tense" | "Romantic" | "Epic" | "Mysterious" | "Happy" | "Neutral";
+
+// Map vibes to Tailwind hex colors for inline CSS variable updates
+const VIBE_HEX: Record<VibeCategory, string> = {
+    Neutral: '#a855f7',     // purple-500
+    Melancholic: '#3b82f6', // blue-500
+    Serene: '#14b8a6',      // teal-500
+    Dark: '#991b1b',        // red-800
+    Tense: '#dc2626',       // red-600
+    Romantic: '#f43f5e',    // rose-500
+    Epic: '#f59e0b',        // amber-500
+    Mysterious: '#8b5cf6',  // violet-500
+    Happy: '#eab308'        // yellow-500
+};
+
 export const Home: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<SearchResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
+    const [currentVibe, setCurrentVibe] = useState<VibeCategory>("Neutral");
 
     useEffect(() => {
         getSystemStatus().then(setSystemStatus).catch(console.error);
@@ -19,10 +35,14 @@ export const Home: React.FC = () => {
         setIsLoading(true);
         setError(null);
         setResult(null);
+        setCurrentVibe("Neutral"); // Reset while searching
 
         try {
             const data = await searchVibes(query);
             setResult(data);
+            if (data.vibe) {
+                setCurrentVibe(data.vibe as VibeCategory);
+            }
         } catch (err: any) {
             console.error("Search failed:", err);
             setError(err.message || 'An error occurred during search.');
@@ -31,18 +51,29 @@ export const Home: React.FC = () => {
         }
     };
 
+    const activeHex = VIBE_HEX[currentVibe] || VIBE_HEX.Neutral;
+
     return (
-        <div className="relative min-h-screen flex flex-col font-sans text-white overflow-x-hidden">
-            <BackgroundEffect />
+        <div
+            className="relative min-h-screen flex flex-col font-sans text-white overflow-x-hidden transition-colors duration-1000"
+            style={{
+                '--vibe-color': activeHex,
+                '--vibe-shadow': `0 0 10px ${activeHex}`
+            } as React.CSSProperties}
+        >
+            <BackgroundEffect vibe={currentVibe} />
 
             <Navbar />
 
             <main className="relative z-10 flex-1 flex flex-col items-center pt-20 px-8 text-center max-w-7xl mx-auto w-full">
                 {/* Hero Section */}
                 <div className={`transition-all duration-700 ease-out flex flex-col items-center ${result ? 'scale-90 -translate-y-10 opacity-60' : 'scale-100 translate-y-0 opacity-100'}`}>
-                    <h1 className="text-[clamp(3rem,5vw,4.5rem)] font-extrabold leading-tight mb-6 tracking-tight">
+                    <h1 className="text-[clamp(3rem,5vw,4.5rem)] font-extrabold leading-tight mb-6 tracking-tight transition-colors duration-1000">
                         What vibe are we <br />
-                        <span className="inline-block bg-gradient-to-tr from-purple-500 via-pink-500 to-amber-500 bg-[length:200%_auto] text-transparent bg-clip-text animate-shine pb-4 px-2">
+                        <span
+                            className="inline-block bg-[length:200%_auto] text-transparent bg-clip-text animate-shine pb-4 px-2 transition-all duration-1000"
+                            style={{ backgroundImage: `linear-gradient(to top right, ${activeHex}, #ec4899, #06b6d4)` }}
+                        >
                             feeling today?
                         </span>
                     </h1>
@@ -57,7 +88,7 @@ export const Home: React.FC = () => {
                 {!result && !isLoading && !error && (
                     <div className="mt-10 flex gap-3 flex-wrap justify-center animate-slideUp" style={{ animationDelay: '0.6s' }}>
                         {['⛈️ Dark & Stormy', '⚔️ Betrayal plots', '🌸 Serene moments', '🗺️ World building'].map(suggestion => (
-                            <button key={suggestion} onClick={() => handleSearch(suggestion.substring(3))} className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-[var(--text-muted)] hover:text-white hover:bg-white/10 hover:border-purple-500/30 transition-all backdrop-blur-md hover:-translate-y-0.5">
+                            <button key={suggestion} onClick={() => handleSearch(suggestion.substring(3))} className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-all backdrop-blur-md hover:-translate-y-0.5" style={{ borderColor: `color-mix(in srgb, ${activeHex} 30%, transparent)` }}>
                                 {suggestion}
                             </button>
                         ))}
@@ -67,8 +98,8 @@ export const Home: React.FC = () => {
                 {/* Loading State */}
                 {isLoading && (
                     <div className="mt-16 flex flex-col items-center opacity-70 animate-pulse">
-                        <div className="w-12 h-12 rounded-full border-4 border-purple-500/30 border-t-purple-500 animate-spin mb-4" />
-                        <p className="text-purple-300 font-medium tracking-wider uppercase text-sm">Synthesizing vibes from Vector Space...</p>
+                        <div className="w-12 h-12 rounded-full border-4 animate-spin mb-4 transition-colors duration-1000" style={{ borderColor: `color-mix(in srgb, ${activeHex} 30%, transparent)`, borderTopColor: activeHex }} />
+                        <p className="font-medium tracking-wider uppercase text-sm transition-colors duration-1000" style={{ color: activeHex }}>Synthesizing vibes from Vector Space...</p>
                     </div>
                 )}
 
@@ -84,7 +115,8 @@ export const Home: React.FC = () => {
                     <div className="mt-12 w-full max-w-4xl text-left animate-slideUp pb-24">
                         <div className="glass-card mb-8">
                             <h2 className="text-sm font-bold tracking-widest text-[var(--text-muted)] uppercase mb-4 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7]" /> AI Synthesis
+                                <span className="w-2 h-2 rounded-full transition-colors duration-1000" style={{ backgroundColor: activeHex, boxShadow: 'var(--vibe-shadow)' }} />
+                                AI Synthesis {currentVibe !== "Neutral" && <span className="text-xs px-2 py-0.5 rounded border ml-2 transition-colors duration-1000" style={{ borderColor: `color-mix(in srgb, ${activeHex} 50%, transparent)`, color: activeHex }}>Vibe: {currentVibe}</span>}
                             </h2>
                             {result.answer && result.answer.trim() !== 'Empty Response' ? (
                                 <div className="prose prose-invert max-w-none text-lg leading-relaxed">
@@ -95,7 +127,7 @@ export const Home: React.FC = () => {
                             ) : (
                                 <div className="flex flex-col items-center gap-3 py-8 text-[var(--text-muted)]">
                                     <BookOpen size={36} className="opacity-30" />
-                                    <p className="text-center">No matching passages found. Try uploading more novels via the <span className="text-purple-400 cursor-pointer underline underline-offset-2" onClick={() => window.location.href = '/library'}>Library</span>.</p>
+                                    <p className="text-center">No matching passages found. Try uploading more novels via the <span className="cursor-pointer underline underline-offset-2 transition-colors duration-1000" style={{ color: activeHex }} onClick={() => window.location.href = '/library'}>Library</span>.</p>
                                 </div>
                             )}
                         </div>
@@ -107,7 +139,7 @@ export const Home: React.FC = () => {
                                     {result.sources.map((source, i) => (
                                         <div key={i} className="glass-card bg-white/[0.02] hover:bg-white/[0.04] transition-colors group">
                                             <div className="flex justify-between items-start mb-3">
-                                                <div className="flex items-center gap-2 text-purple-400">
+                                                <div className="flex items-center gap-2 transition-colors duration-1000" style={{ color: activeHex }}>
                                                     <BookOpen size={16} />
                                                     <span className="font-semibold text-sm">{source.filename}</span>
                                                 </div>
@@ -115,7 +147,7 @@ export const Home: React.FC = () => {
                                                     Score: {source.score.toFixed(3)}
                                                 </span>
                                             </div>
-                                            <p className="text-white/70 text-sm leading-relaxed italic border-l-2 border-purple-500/30 pl-4 py-1">
+                                            <p className="text-white/70 text-sm leading-relaxed italic border-l-2 pl-4 py-1 transition-colors duration-1000" style={{ borderColor: `color-mix(in srgb, ${activeHex} 50%, transparent)` }}>
                                                 "{source.text}"
                                             </p>
                                         </div>
