@@ -20,4 +20,8 @@ def get_vector_store():
     if it doesn't already exist.
     """
     client = get_qdrant_client()
-    return QdrantVectorStore(client=client, collection_name=COLLECTION_NAME)
+    return QdrantVectorStore(
+        client=client,
+        collection_name=COLLECTION_NAME,
+        enable_hybrid=True
+    )

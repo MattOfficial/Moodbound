@@ -18,3 +18,4 @@ EbookLib
 html2text
 neo4j
 pre-commit
+fastembed

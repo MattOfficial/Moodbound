@@ -17,7 +17,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => 
     };
 
     return (
-        <div className="w-full max-w-[760px] relative animate-[slideUp_0.8s_ease-out_0.4s_forwards] opacity-0 translate-y-5">
+        <div className="w-full max-w-[760px] relative animate-slideUp" style={{ animationDelay: '0.4s' }}>
             <form
                 onSubmit={handleSubmit}
                 className="w-full bg-white/5 backdrop-blur-[40px] border border-white/10 rounded-3xl p-2 flex items-center shadow-[0_20px_40px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)] transition-all duration-400 focus-within:bg-white/10 focus-within:border-purple-500/50 focus-within:shadow-[0_20px_50px_rgba(168,85,247,0.2),inset_0_1px_0_rgba(255,255,255,0.1)] focus-within:-translate-y-0.5"

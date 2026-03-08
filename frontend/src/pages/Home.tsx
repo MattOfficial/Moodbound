@@ -42,7 +42,7 @@ export const Home: React.FC = () => {
                 <div className={`transition-all duration-700 ease-out flex flex-col items-center ${result ? 'scale-90 -translate-y-10 opacity-60' : 'scale-100 translate-y-0 opacity-100'}`}>
                     <h1 className="text-[clamp(3rem,5vw,4.5rem)] font-extrabold leading-[1.1] mb-6 tracking-tight">
                         What vibe are we <br />
-                        <span className="inline-block bg-gradient-to-tr from-purple-500 via-pink-500 to-amber-500 bg-[length:200%_auto] text-transparent bg-clip-text animate-[shine_4s_linear_infinite]">
+                        <span className="inline-block bg-gradient-to-tr from-purple-500 via-pink-500 to-amber-500 bg-[length:200%_auto] text-transparent bg-clip-text animate-shine">
                             feeling today?
                         </span>
                     </h1>
@@ -55,7 +55,7 @@ export const Home: React.FC = () => {
 
                 {/* Suggestions when empty */}
                 {!result && !isLoading && !error && (
-                    <div className="mt-10 flex gap-3 flex-wrap justify-center animate-[slideUp_0.8s_ease-out_0.6s_forwards] opacity-0 translate-y-5">
+                    <div className="mt-10 flex gap-3 flex-wrap justify-center animate-slideUp" style={{ animationDelay: '0.6s' }}>
                         {['⛈️ Dark & Stormy', '⚔️ Betrayal plots', '🌸 Serene moments', '🗺️ World building'].map(suggestion => (
                             <button key={suggestion} onClick={() => handleSearch(suggestion.substring(3))} className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-[var(--text-muted)] hover:text-white hover:bg-white/10 hover:border-purple-500/30 transition-all backdrop-blur-md hover:-translate-y-0.5">
                                 {suggestion}
@@ -81,7 +81,7 @@ export const Home: React.FC = () => {
 
                 {/* Results Stream */}
                 {result && !isLoading && (
-                    <div className="mt-12 w-full max-w-4xl text-left overflow-y-auto max-h-[60vh] pr-1 pb-2 animate-[slideUp_0.8s_ease-out_forwards]">
+                    <div className="mt-12 w-full max-w-4xl text-left overflow-y-auto max-h-[60vh] pr-1 pb-2 animate-slideUp">
                         <div className="glass-card mb-8">
                             <h2 className="text-sm font-bold tracking-widest text-[var(--text-muted)] uppercase mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7]" /> AI Synthesis

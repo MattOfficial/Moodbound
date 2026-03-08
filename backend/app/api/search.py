@@ -35,8 +35,12 @@ async def search_novels(search_query: SearchQuery):
 
         # 3. Create the Query Engine
         # similarity_top_k dictates how many chunks we retrieve. We will pull the Top 3 most relevant scenes.
-        logger.info("Executing vector search against Qdrant...")
-        query_engine = index.as_query_engine(similarity_top_k=3)
+        logger.info("Executing hybrid search (Dense Vectors + BM25 Sparse) against Qdrant...")
+        query_engine = index.as_query_engine(
+            similarity_top_k=3,
+            vector_store_query_mode="hybrid",
+            alpha=0.5
+        )
 
         # 4. Execute the query and synthesize the response
         response = query_engine.query(search_query.query)
