@@ -40,9 +40,9 @@ export const Home: React.FC = () => {
             <main className="relative z-10 flex-1 flex flex-col items-center pt-20 px-8 text-center max-w-7xl mx-auto w-full">
                 {/* Hero Section */}
                 <div className={`transition-all duration-700 ease-out flex flex-col items-center ${result ? 'scale-90 -translate-y-10 opacity-60' : 'scale-100 translate-y-0 opacity-100'}`}>
-                    <h1 className="text-[clamp(3rem,5vw,4.5rem)] font-extrabold leading-[1.1] mb-6 tracking-tight">
+                    <h1 className="text-[clamp(3rem,5vw,4.5rem)] font-extrabold leading-tight mb-6 tracking-tight">
                         What vibe are we <br />
-                        <span className="inline-block bg-gradient-to-tr from-purple-500 via-pink-500 to-amber-500 bg-[length:200%_auto] text-transparent bg-clip-text animate-shine">
+                        <span className="inline-block bg-gradient-to-tr from-purple-500 via-pink-500 to-amber-500 bg-[length:200%_auto] text-transparent bg-clip-text animate-shine pb-4 px-2">
                             feeling today?
                         </span>
                     </h1>
@@ -81,7 +81,7 @@ export const Home: React.FC = () => {
 
                 {/* Results Stream */}
                 {result && !isLoading && (
-                    <div className="mt-12 w-full max-w-4xl text-left overflow-y-auto max-h-[60vh] pr-1 pb-2 animate-slideUp">
+                    <div className="mt-12 w-full max-w-4xl text-left animate-slideUp pb-24">
                         <div className="glass-card mb-8">
                             <h2 className="text-sm font-bold tracking-widest text-[var(--text-muted)] uppercase mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7]" /> AI Synthesis
