@@ -233,6 +233,54 @@ export const Graph = () => {
                         linkWidth={getLinkWidth}
                         linkDirectionalArrowLength={4}
                         linkDirectionalArrowRelPos={1}
+                        linkCanvasObjectMode={() => 'after'}
+                        linkCanvasObject={(link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+                            const start = link.source;
+                            const end = link.target;
+                            if (typeof start !== 'object' || typeof end !== 'object') return;
+
+                            const isHovered = hoverNode ? connectedLinks.has(link) : false;
+                            const isGraphHovered = hoverNode !== null;
+
+                            // Hide un-hovered labels for cleaner UI when interacting
+                            if (isGraphHovered && !isHovered) return;
+
+                            const label = link.label;
+                            if (!label) return;
+
+                            const fontSize = 10 / globalScale;
+                            ctx.font = `500 ${fontSize}px Sans-Serif`;
+
+                            // Calculate position
+                            const textPos = {
+                                x: start.x + (end.x - start.x) / 2,
+                                y: start.y + (end.y - start.y) / 2
+                            };
+
+                            const relLink = { x: end.x - start.x, y: end.y - start.y };
+                            let textAngle = Math.atan2(relLink.y, relLink.x);
+                            // Maintain label vertical orientation
+                            if (textAngle > Math.PI / 2) textAngle = -(Math.PI - textAngle);
+                            if (textAngle < -Math.PI / 2) textAngle = -(-Math.PI - textAngle);
+
+                            ctx.save();
+                            ctx.translate(textPos.x, textPos.y);
+                            ctx.rotate(textAngle);
+
+                            // Background bounding box for text
+                            const textWidth = ctx.measureText(label).width;
+                            const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.4);
+
+                            ctx.fillStyle = isHovered ? 'rgba(15, 23, 42, 0.95)' : 'rgba(15, 23, 42, 0.6)';
+                            ctx.fillRect(-bckgDimensions[0] / 2, -bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
+
+                            // Text fill
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillStyle = isHovered ? '#e2e8f0' : '#64748b';
+                            ctx.fillText(label, 0, 0);
+                            ctx.restore();
+                        }}
                         onNodeHover={(node) => setHoverNode(node ? (node.id as string) : null)}
                         // Subtle inertia
                         d3VelocityDecay={0.2}
