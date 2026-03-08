@@ -63,12 +63,11 @@ const GenreSection: React.FC<{
                                 <p className="font-semibold truncate text-sm">{doc.filename}</p>
                                 <p className="text-xs text-[var(--text-muted)] mt-0.5 font-mono">{formatDate(doc.created_at)}</p>
                             </div>
-                            <StatusBadge status={doc.status} />
 
                             {['Completed', 'Processing'].includes(doc.status) && (
                                 <Link
                                     to={`/graph/${doc.id}`}
-                                    className="ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 hover:text-white transition-colors flex items-center gap-1.5 shrink-0 opacity-0 group-hover/row:opacity-100"
+                                    className="ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 hover:text-white transition-colors flex items-center gap-1.5 shrink-0 invisible group-hover/row:visible"
                                 >
                                     <Network size={14} /> Graph
                                 </Link>
@@ -77,7 +76,7 @@ const GenreSection: React.FC<{
                             <button
                                 onClick={() => onDelete(doc)}
                                 disabled={deletingId === doc.id}
-                                className="ml-1 w-7 h-7 rounded-lg flex items-center justify-center text-white/25 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover/row:opacity-100 shrink-0 disabled:cursor-not-allowed"
+                                className="ml-1 w-7 h-7 rounded-lg flex items-center justify-center text-white/25 hover:text-red-400 hover:bg-red-500/10 transition-all invisible group-hover/row:visible shrink-0 disabled:cursor-not-allowed"
                                 title="Delete document"
                             >
                                 {deletingId === doc.id
@@ -85,6 +84,8 @@ const GenreSection: React.FC<{
                                     : <Trash2 size={13} />
                                 }
                             </button>
+
+                            <StatusBadge status={doc.status} />
                         </div>
                     ))}
                 </div>

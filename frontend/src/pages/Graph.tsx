@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import * as d3 from 'd3-force';
 import ReactFlow, {
     Controls,
     Background,
@@ -42,35 +43,50 @@ export const Graph = () => {
                 // Clear any previous error if we successfully got data
                 setError(null);
 
-                // Simple circular layout algorithm for nodes
-                const numNodes = data.nodes.length;
-                const radius = Math.max(250, numNodes * 35);
+                // Setup d3-force simulation for organic layout
                 const centerX = window.innerWidth / 2;
                 const centerY = window.innerHeight / 2;
+                const simulationNodes = data.nodes.map(n => ({
+                    ...n,
+                    x: centerX + (Math.random() - 0.5) * 50,
+                    y: centerY + (Math.random() - 0.5) * 50
+                }));
 
-                const flowNodes: Node[] = data.nodes.map((node, i) => {
-                    const angle = (i / numNodes) * 2 * Math.PI;
-                    return {
-                        id: node.id,
-                        position: {
-                            x: centerX + radius * Math.cos(angle) - 50,
-                            y: centerY + radius * Math.sin(angle) - 20,
-                        },
-                        data: { label: node.label },
-                        style: {
-                            background: 'rgba(30, 41, 59, 0.9)',
-                            color: 'white',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
-                            borderRadius: '8px',
-                            padding: '12px 20px',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1)',
-                        }
-                    };
-                });
+                // Filter out dangling edges to prevent D3 NaN coordinate contamination
+                const nodeIds = new Set(data.nodes.map(n => n.id));
+                const validEdges = data.edges.filter(e => nodeIds.has(e.source) && nodeIds.has(e.target));
+                const simulationLinks = validEdges.map(e => ({ ...e, source: e.source, target: e.target }));
 
-                const flowEdges: Edge[] = data.edges.map((edge, i) => ({
+                const simulation = d3.forceSimulation(simulationNodes as any)
+                    .force('charge', d3.forceManyBody().strength(-2000)) // Repel each other strongly
+                    .force('link', d3.forceLink(simulationLinks).id((d: any) => d.id).distance(150)) // Pull connected ones together
+                    .force('center', d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2))
+                    .force('collide', d3.forceCollide().radius(60)); // Prevent nodes from overlapping directly
+
+                // Pre-compute the physics layout synchronously so it doesn't animate crazily on screen
+                simulation.stop();
+                for (let i = 0; i < 300; ++i) simulation.tick();
+
+                const flowNodes: Node[] = simulationNodes.map((node: any) => ({
+                    id: node.id,
+                    position: {
+                        x: node.x - 75, // center offset for average node width
+                        y: node.y - 20, // center offset
+                    },
+                    data: { label: node.label },
+                    style: {
+                        background: 'rgba(30, 41, 59, 0.95)',
+                        color: 'white',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '8px',
+                        padding: '12px 20px',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1)',
+                    }
+                }));
+
+                const flowEdges: Edge[] = validEdges.map((edge: any, i: number) => ({
                     id: `e${i}-${edge.source}-${edge.target}`,
                     source: edge.source,
                     target: edge.target,
@@ -124,10 +140,10 @@ export const Graph = () => {
                     <div className="flex items-center gap-3 mb-1">
                         <Network className="text-purple-400" size={24} />
                         <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
-                            Knowledge Graph
+                            Story Web
                         </h1>
                     </div>
-                    <p className="text-white/50 text-sm font-medium tracking-wide uppercase">Neo4j Relationship Explorer</p>
+                    <p className="text-white/50 text-sm font-medium tracking-wide uppercase">Dynamic Character Constellation</p>
                 </div>
             </div>
 
