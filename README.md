@@ -74,6 +74,7 @@ graph TD
 |---|---|---|
 | **Frontend** | React 19 + Vite + TypeScript | SPA with glassmorphic UI |
 | **Styling** | Tailwind CSS | Dynamic, vibe-reactive styling |
+| **Visual Effects** | vibe-particles NPM | Custom WebGL/Canvas autonomous particle physics engine |
 | **Backend** | Python + FastAPI | REST API & orchestration |
 | **AI Orchestration** | LlamaIndex | RAG pipeline, query engine |
 | **LLM / Embeddings** | DeepSeek / OpenAI / Gemini | Synthesis, embeddings, NER extraction |

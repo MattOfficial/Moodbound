@@ -7,7 +7,7 @@ This document provides full architectural context for Gemini instances stepping 
 **Moodbound** is a "Vibe Search" and Knowledge Graph engine for Light Novels (PDF/EPUBs). Instead of traditional keyword search, it allows users to search by emotional tone ("dark and stormy", "betrayal"), while simultaneously extracting and visualizing character relationships via an HTML5 WebGL Knowledge Graph.
 
 ## Technology Stack
-- **Frontend**: React 18, Vite, Tailwind CSS, Lucide React (Icons), `react-force-graph-2d` (WebGL Canvas Graph Rendering).
+- **Frontend**: React 18, Vite, Tailwind CSS, Lucide React (Icons), `react-force-graph-2d` (WebGL Canvas Graph Rendering), `vibe-particles` (NPM WebGL Particle Engine).
 - **Backend API**: Python 3.10+, FastAPI, Uvicorn (Development Server).
 - **Background Workers**: `arq` (Redis-backed Async Job Queues).
 - **Database & Storage**:
