@@ -39,8 +39,8 @@ Upload a novel. Ask about a vibe. Get back the exact scene, excerpt, and AI-synt
 | 🔌 **Decoupled AI Providers** | ✅ Complete | Mix/match LLMs and Embeddings (`deepseek` + `gemini`) |
 | 🌐 **Knowledge Graph** | ✅ Complete | Neo4j character relationship graph with d3-force clustering |
 | ♻️ **Cascading DB Deletes** | ✅ Complete | Deleting a novel cleans Postgres, Qdrant, and Neo4j |
-| 🎨 **Vibe-Reactive UI** | 🔜 Planned | Theme transitions based on the mood of search results |
-| 🔍 **Hybrid Search (RRF)** | 🔜 Planned | Combine dense vectors + BM25 sparse search |
+| 🎨 **Vibe-Reactive UI** | ✅ Complete | Theme and particle physics shift to match the mood of search results |
+| 🔍 **Hybrid Search (RRF)** | ✅ Complete | Combine dense vectors + BM25 sparse search |
 
 ---
 
@@ -114,6 +114,8 @@ docker compose up -d
 ```bash
 cd backend
 pip install -r requirements.txt
+python -m fastembed download # Pre-download BM25 sparse weights
+```
 
 # Terminal 1: API server
 python -m uvicorn app.main:app --reload
@@ -131,6 +133,14 @@ npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) 🎉
+
+### 5. Test the API (Optional)
+You can directly test the Hybrid Hybrid RRF search endpoint from your terminal:
+```bash
+curl -X POST http://localhost:8000/api/search/ \
+  -H "Content-Type: application/json" \
+  -d '{"query": "A melancholic rainy day"}'
+```
 
 ---
 
@@ -221,7 +231,7 @@ sequenceDiagram
 ## 🗺️ Roadmap
 
 - [x] **Hybrid Search (Reciprocal Rank Fusion)** — combined dense + sparse BM25 retrieval
-- [ ] **Vibe-Reactive UI** — color palette and animations shift to match the emotional tone of results
+- [x] **Vibe-Reactive UI** — color palette and particle physics shift to match the emotional tone of results
 - [ ] **GraphRAG Queries** — route relationship questions to Neo4j instead of Qdrant
 - [ ] **Streaming Chat Responses** — Stream text blocks live to UI to hide API latency
 

@@ -5,10 +5,11 @@ import { SearchBar } from '../components/SearchBar';
 import { searchVibes, type SearchResponse, getSystemStatus, type SystemStatusResponse } from '../api/client';
 import { BookOpen } from 'lucide-react';
 
-type VibeCategory = "Melancholic" | "Serene" | "Dark" | "Tense" | "Romantic" | "Epic" | "Mysterious" | "Happy" | "Neutral";
+type VibeCategory = "Antigravity" | "Melancholic" | "Serene" | "Dark" | "Tense" | "Romantic" | "Epic" | "Mysterious" | "Happy" | "Neutral";
 
 // Map vibes to Tailwind hex colors for inline CSS variable updates
 const VIBE_HEX: Record<VibeCategory, string> = {
+    Antigravity: '#3b82f6', // blue-500
     Neutral: '#a855f7',     // purple-500
     Melancholic: '#3b82f6', // blue-500
     Serene: '#14b8a6',      // teal-500
@@ -25,7 +26,7 @@ export const Home: React.FC = () => {
     const [result, setResult] = useState<SearchResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
-    const [currentVibe, setCurrentVibe] = useState<VibeCategory>("Neutral");
+    const [currentVibe, setCurrentVibe] = useState<VibeCategory>("Antigravity");
 
     useEffect(() => {
         getSystemStatus().then(setSystemStatus).catch(console.error);
@@ -58,10 +59,11 @@ export const Home: React.FC = () => {
             className="relative min-h-screen flex flex-col font-sans text-white overflow-x-hidden transition-colors duration-1000"
             style={{
                 '--vibe-color': activeHex,
-                '--vibe-shadow': `0 0 10px ${activeHex}`
+                '--vibe-shadow': `0 0 10px ${activeHex}`,
+                backgroundColor: `color-mix(in srgb, ${activeHex} 12%, #010108)` // Global atmospheric tint
             } as React.CSSProperties}
         >
-            <BackgroundEffect vibe={currentVibe} />
+            <BackgroundEffect vibe={currentVibe} activeHex={activeHex} />
 
             <Navbar />
 

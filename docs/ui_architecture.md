@@ -15,9 +15,11 @@ The visual language must constantly reinforce the feeling of magic, story, and d
 2. **Dynamic Mesh Gradients**:
    - Avoid flat backgrounds. Use large, slow-moving CSS blurred elements (`filter: blur(120px)`) that float in the back layer.
    - The colors of these mesh elements (orbs/blobs) represent the AI's "brain" and the current "Vibe" of the application.
-3. **Interactive Canvas Details**:
-   - A defining feature of the UI is a **Dot Matrix background animation** rendered on a `<canvas>` element.
-   - This matrix should *not* be static. It must react to the user. For instance, creating rippling waves or light-novel-themed geometric disturbances around the mouse cursor to give the interface a tactile, "alive" feeling.
+3. **Interactive Canvas Details (`vibe-particles`)**:
+   - A defining feature of the UI is the autonomous background **particle physics engine** rendered on a `<canvas>` element via the custom `vibe-particles` package.
+   - The canvas is fixed (`fixed inset-0 z-0`) underneath the application so that the UI can freely scroll over it without the effect cutting off.
+   - The particles and mesh gradients must be **vibe-reactive**. When a user's search returns a "Melancholic" vibe, the mesh color should shift to oceanic blues and the particle weather should match (e.g., Rain effect).
+   - The global application wrapper also uses a css `color-mix` tint injected with the active Semantic hex color to bathe the entire app context in that emotion. The default starting state is the high-energy blue **Antigravity** preset.
 
 ## Main Entry Point Focus
 The dashboard is centered around the **Vibe Search Hero**. The search bar is the hero element—massive, central, and glowing. It invites natural language queries (e.g., "Find quotes with a melancholic rainy day vibe"). System stats (like "Books Indexed") are secondary and relegated to subtle side widgets so they do not distract from the story exploration.
