@@ -10,6 +10,7 @@ export const apiClient = axios.create({
 export interface SearchResponse {
     answer: string;
     vibe?: string;
+    engine?: string;
     sources: Array<{
         text: string;
         score: number;

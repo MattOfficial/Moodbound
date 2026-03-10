@@ -3,7 +3,7 @@ import { BackgroundEffect } from '../components/BackgroundEffect';
 import { Navbar } from '../components/Navbar';
 import { SearchBar } from '../components/SearchBar';
 import { searchVibes, type SearchResponse, getSystemStatus, type SystemStatusResponse } from '../api/client';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Network, Sparkles, MoveRight } from 'lucide-react';
 
 type VibeCategory = "Antigravity" | "Melancholic" | "Serene" | "Dark" | "Tense" | "Romantic" | "Epic" | "Mysterious" | "Happy" | "Neutral";
 
@@ -117,8 +117,15 @@ export const Home: React.FC = () => {
                     <div className="mt-12 w-full max-w-4xl text-left animate-slideUp pb-24">
                         <div className="glass-card mb-8">
                             <h2 className="text-sm font-bold tracking-widest text-[var(--text-muted)] uppercase mb-4 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full transition-colors duration-1000" style={{ backgroundColor: activeHex, boxShadow: 'var(--vibe-shadow)' }} />
-                                AI Synthesis {currentVibe !== "Neutral" && <span className="text-xs px-2 py-0.5 rounded border ml-2 transition-colors duration-1000" style={{ borderColor: `color-mix(in srgb, ${activeHex} 50%, transparent)`, color: activeHex }}>Vibe: {currentVibe}</span>}
+                                {result.engine === 'neo4j-graph' ? (
+                                    <Network size={16} className="transition-colors duration-1000" style={{ color: activeHex, filter: `drop-shadow(0 0 5px ${activeHex})` }} />
+                                ) : result.engine === 'qdrant-hybrid' ? (
+                                    <Sparkles size={16} className="transition-colors duration-1000" style={{ color: activeHex, filter: `drop-shadow(0 0 5px ${activeHex})` }} />
+                                ) : (
+                                    <span className="w-2 h-2 rounded-full transition-colors duration-1000" style={{ backgroundColor: activeHex, boxShadow: 'var(--vibe-shadow)' }} />
+                                )}
+                                {result.engine === 'neo4j-graph' ? 'Knowledge Graph Extraction' : result.engine === 'qdrant-hybrid' ? 'Semantic Synthesis' : 'AI Synthesis'}
+                                {currentVibe !== "Neutral" && <span className="text-xs px-2 py-0.5 rounded border ml-2 transition-colors duration-1000" style={{ borderColor: `color-mix(in srgb, ${activeHex} 50%, transparent)`, color: activeHex }}>Vibe: {currentVibe}</span>}
                             </h2>
                             {result.answer && result.answer.trim() !== 'Empty Response' ? (
                                 <div className="prose prose-invert max-w-none text-lg leading-relaxed">
@@ -138,22 +145,53 @@ export const Home: React.FC = () => {
                             <>
                                 <h3 className="text-sm font-bold tracking-widest text-[var(--text-muted)] uppercase mb-4 ml-2">Source Excerpts</h3>
                                 <div className="grid gap-4">
-                                    {result.sources.map((source, i) => (
-                                        <div key={i} className="glass-card bg-white/[0.02] hover:bg-white/[0.04] transition-colors group">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="flex items-center gap-2 transition-colors duration-1000" style={{ color: activeHex }}>
-                                                    <BookOpen size={16} />
-                                                    <span className="font-semibold text-sm">{source.filename}</span>
+                                    {result.sources.map((source, i) => {
+                                        if (source.filename === "Neo4j Knowledge Graph") {
+                                            const lines = source.text.replace("Graph Cypher Extraction:\n", "").split('\n').filter(Boolean);
+                                            return (
+                                                <div key={i} className="glass-card bg-white/[0.02] border border-white/5 group p-5">
+                                                    <div className="flex items-center gap-2 mb-4">
+                                                        <Network size={16} className="transition-colors duration-1000" style={{ color: activeHex }} />
+                                                        <span className="font-semibold text-sm transition-colors duration-1000" style={{ color: activeHex }}>Knowledge Graph Subgraph</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {lines.map((line, idx) => {
+                                                            const match = line.match(/(.+) -\[(.+)\]-> (.+)/);
+                                                            if (match) {
+                                                                return (
+                                                                    <div key={idx} className="flex items-center flex-wrap gap-1 text-xs font-mono bg-white/5 border border-white/10 rounded-md px-3 py-1.5 transition-all duration-500 hover:bg-white/10 hover:border-white/20 cursor-default">
+                                                                        <span className="text-white whitespace-nowrap px-1.5 py-0.5 rounded bg-black/20 font-semibold">{match[1]}</span>
+                                                                        <MoveRight size={12} className="text-white/40" />
+                                                                        <span className="text-[var(--text-muted)] italic whitespace-nowrap">{match[2].replace(/_/g, ' ')}</span>
+                                                                        <MoveRight size={12} className="text-white/40" />
+                                                                        <span className="text-white whitespace-nowrap px-1.5 py-0.5 rounded bg-black/20 font-semibold">{match[3]}</span>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return <span key={idx} className="text-xs font-mono text-white/50">{line}</span>;
+                                                        })}
+                                                    </div>
                                                 </div>
-                                                <span className="text-xs font-mono text-white/40 bg-white/5 px-2 py-1 rounded-md">
-                                                    Score: {source.score.toFixed(3)}
-                                                </span>
+                                            );
+                                        }
+
+                                        return (
+                                            <div key={i} className="glass-card bg-white/[0.02] hover:bg-white/[0.04] transition-colors group">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div className="flex items-center gap-2 transition-colors duration-1000" style={{ color: activeHex }}>
+                                                        <BookOpen size={16} />
+                                                        <span className="font-semibold text-sm">{source.filename}</span>
+                                                    </div>
+                                                    <span className="text-xs font-mono text-white/40 bg-white/5 px-2 py-1 rounded-md">
+                                                        Score: {source.score.toFixed(3)}
+                                                    </span>
+                                                </div>
+                                                <p className="text-white/70 text-sm leading-relaxed italic border-l-2 pl-4 py-1 transition-colors duration-1000" style={{ borderColor: `color-mix(in srgb, ${activeHex} 50%, transparent)` }}>
+                                                    "{source.text}"
+                                                </p>
                                             </div>
-                                            <p className="text-white/70 text-sm leading-relaxed italic border-l-2 pl-4 py-1 transition-colors duration-1000" style={{ borderColor: `color-mix(in srgb, ${activeHex} 50%, transparent)` }}>
-                                                "{source.text}"
-                                            </p>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </>
                         )}
