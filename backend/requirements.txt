@@ -19,3 +19,7 @@ html2text
 neo4j
 pre-commit
 fastembed
+
+# Local Platform Packages
+-e ../packages/vibe-chunker
+-e ../packages/vibe-router

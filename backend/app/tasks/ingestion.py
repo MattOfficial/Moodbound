@@ -13,36 +13,19 @@ from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.core.settings import Settings
 from llama_index.core.schema import TextNode
 
+from vibe_router import AgenticRouter
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Fixed genre labels the LLM must choose from
-GENRE_LABELS = [
-    "Fantasy", "Sci-Fi", "Romance", "Mystery",
-    "Thriller", "Horror", "Historical Fiction",
-    "Literary Fiction", "Adventure", "Non-Fiction",
-]
 
 async def _classify_genre(sample_text: str) -> str:
     """
     Calls the configured LLM with a constrained prompt to classify a novel's genre.
-    Returns one of the GENRE_LABELS, or 'Uncategorized' on failure.
     """
-    label_list = ", ".join(GENRE_LABELS)
-    prompt = (
-        f"You are a literary genre classifier. Based on the following excerpt from a novel, "
-        f"classify it into exactly ONE of these genres: {label_list}.\n\n"
-        f"Respond with ONLY the genre name and nothing else.\n\n"
-        f"EXCERPT:\n{sample_text[:2000]}"
-    )
     try:
-        response = await asyncio.to_thread(Settings.llm.complete, prompt)
-        raw = str(response).strip()
-        # Find the first matching label (case-insensitive)
-        for label in GENRE_LABELS:
-            if label.lower() in raw.lower():
-                return label
-        logger.warning(f"LLM returned unrecognised genre '{raw}' — falling back to Uncategorized.")
+        router = AgenticRouter(llm=Settings.llm)
+        genre = await asyncio.to_thread(router.classify_genre, sample_text)
+        return genre
     except Exception as e:
         logger.warning(f"Genre classification failed: {e}")
     return "Uncategorized"
@@ -96,7 +79,7 @@ async def process_document(ctx, document_id: str):
         db.commit()
 
         # 2. Narrative Chunking
-        nodes = parse_and_chunk_document(doc.file_path, doc.filename)
+        nodes = parse_and_chunk_document(doc.file_path, doc.filename, user_id=str(doc.user_id))
 
         # 3. Configure AI provider
         from app.ai_config import configure_ai_settings
@@ -105,10 +88,7 @@ async def process_document(ctx, document_id: str):
         # 4. Generate Embeddings → Qdrant
         logger.info(f"Generating vectors for {len(nodes)} chunks...")
 
-        # Inject user_id into every node's metadata so Qdrant can filter by it
-        for node in nodes:
-            if isinstance(node, TextNode):
-                node.metadata["user_id"] = str(doc.user_id)
+        # The user_id is now safely injected via the vibe-chunker metadata framework.
 
         vector_store = get_vector_store()
         storage_context = StorageContext.from_defaults(vector_store=vector_store)

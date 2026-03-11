@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vibe-router"
+version = "0.1.0"
+description = "Agentic LLM router for classification and decision making."
+readme = "README.md"
+authors = [
+  { name="Moodbound", email="hello@moodbound.vibe" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "llama-index-core>=0.11.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]

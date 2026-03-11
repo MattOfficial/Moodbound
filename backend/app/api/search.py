@@ -9,6 +9,7 @@ from ..vector_store import get_vector_store
 from ..graph_store import get_triplets_for_characters
 from ..auth import get_current_user
 from ..models import User
+from vibe_router import AgenticRouter
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -33,24 +34,12 @@ async def search_novels(
         configure_ai_settings()
 
         # 2. AI Router (Vector vs Graph)
-        router_prompt = (
-            "You are a strict query routing assistant. Categorize the user's query into EXACTLY ONE of two categories: 'Vector' or 'Graph'.\n\n"
-            "RULES:\n"
-            "1. If the query asks 'Why', or asks for a reason, description, lore explanation, abstract concept, or mood, YOU MUST CHOOSE 'Vector'. Example: 'Why was piggy duke fat?' -> Vector. 'Describe the rainy night.' -> Vector.\n"
-            "2. If the query STRICTLY asks for structural relationships between entities (who is related to who, who betrayed who, family ties), choose 'Graph'. Example: 'Who is related to Ao?' -> Graph.\n"
-            "3. Do NOT choose Graph simply because a character's name is in the prompt. 'Who is Piggy Duke?' is Vector. 'Why did Piggy Duke leave?' is Vector. Graph is ONLY for relationship mapping.\n\n"
-            "Output ONLY the exact word 'Vector' or 'Graph' and absolutely nothing else.\n\n"
-            f"Query: '{search_query.query}'"
-        )
-        try:
-            route_response = Settings.llm.complete(router_prompt)
-            route = str(route_response).strip().capitalize()
-            if route not in ["Vector", "Graph"]:
-                route = "Vector"
-        except Exception as e:
-            logger.warning(f"Router failed, defaulting to Vector: {e}")
-            route = "Vector"
-
+        topology = {
+            "Vector": "If the query asks 'Why', or asks for a reason, description, lore explanation, abstract concept, or mood. Example: 'Why was piggy duke fat?'.",
+            "Graph": "If the query STRICTLY asks for structural relationships between entities (who is related to who, who betrayed who, family ties). Example: 'Who is related to Ao?'."
+        }
+        agent = AgenticRouter(llm=Settings.llm)
+        route = agent.route_query(search_query.query, topology=topology, fallback="Vector")
         logger.info(f"AI Router decided: {route}")
 
         if route == "Vector":
@@ -78,21 +67,7 @@ async def search_novels(
             )
 
             # Extract "Vibe" category
-            vibe_prompt = (
-                "Classify the emotional tone of the following search query into EXACTLY ONE of these categories: "
-                "[Melancholic, Serene, Dark, Tense, Romantic, Epic, Mysterious, Happy, Neutral]. "
-                "Output ONLY the category name and nothing else.\n\n"
-                f"Query: '{search_query.query}'"
-            )
-            try:
-                vibe_response = Settings.llm.complete(vibe_prompt)
-                vibe_category = str(vibe_response).strip().strip("[]'\".,").capitalize()
-                valid_vibes = ["Melancholic", "Serene", "Dark", "Tense", "Romantic", "Epic", "Mysterious", "Happy", "Neutral"]
-                if vibe_category not in valid_vibes:
-                    vibe_category = "Neutral"
-            except Exception as e:
-                vibe_category = "Neutral"
-
+            vibe_category = agent.classify_vibe(search_query.query)
             logger.info(f"Query classified as Vibe: {vibe_category}")
 
             response = query_engine.query(search_query.query)
