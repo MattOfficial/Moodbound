@@ -45,13 +45,13 @@ def configure_ai_settings():
     # --- 2. Configure Embeddings ---
     if embed_provider == "openai":
         from llama_index.embeddings.openai import OpenAIEmbedding
-        Settings.embed_model = OpenAIEmbedding(model=embed_model_name)
+        Settings.embed_model = OpenAIEmbedding(model=embed_model_name, embed_batch_size=100)
         logger.info(f"Configured Embeddings: OpenAI ({embed_model_name})")
 
     elif embed_provider == "gemini":
         from llama_index.embeddings.gemini import GeminiEmbedding
         embed_model_str = embed_model_name if embed_model_name.startswith("models/") else f"models/{embed_model_name}"
-        Settings.embed_model = GeminiEmbedding(model_name=embed_model_str)
+        Settings.embed_model = GeminiEmbedding(model_name=embed_model_str, embed_batch_size=100)
         logger.info(f"Configured Embeddings: Gemini ({embed_model_str})")
 
     else:

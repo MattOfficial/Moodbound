@@ -8,6 +8,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
 [![vibe-particles](https://img.shields.io/npm/v/vibe-particles?color=cb3837&label=npm&logo=npm)](https://www.npmjs.com/package/vibe-particles)
+[![agentic-router](https://img.shields.io/pypi/v/agentic-router?color=blue&label=PyPI&logo=pypi)](https://pypi.org/project/agentic-router/)
+[![narrative-chunker](https://img.shields.io/pypi/v/narrative-chunker?color=blue&label=PyPI&logo=pypi)](https://pypi.org/project/narrative-chunker/)
 [![Gemini](https://img.shields.io/badge/Gemini-API-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev)
 [![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?style=flat&logo=openai&logoColor=white)](https://platform.openai.com)
 [![DeepSeek](https://img.shields.io/badge/DeepSeek-API-4D6BFE?style=flat&logo=deepseek&logoColor=white)](https://deepseek.com)
@@ -80,7 +82,9 @@ graph TD
 | **Styling** | Tailwind CSS | Dynamic, vibe-reactive styling |
 | **Visual Effects** | [`vibe-particles` NPM](https://www.npmjs.com/package/vibe-particles) | Extracted, standalone WebGL autonomous particle physics engine |
 | **Backend** | Python + FastAPI | REST API & orchestration |
-| **AI Orchestration** | LlamaIndex | RAG pipeline, query engine |
+| **AI Orchestration** | [`agentic-router` PyPI](https://pypi.org/project/agentic-router/) | Fast, rules-based LLM query routing and custom zero-shot classification |
+| **Text Processing** | [`narrative-chunker` PyPI](https://pypi.org/project/narrative-chunker/) | Semantic document orchestrator for LLM vector boundary chunking |
+| **Core RAG Framework**| LlamaIndex | RAG pipeline, query engine |
 | **LLM / Embeddings** | DeepSeek / OpenAI / Gemini | Synthesis, embeddings, NER extraction |
 | **Vector DB** | Qdrant | Semantic similarity search |
 | **Graph DB** | Neo4j | Character relationship storage (planned) |

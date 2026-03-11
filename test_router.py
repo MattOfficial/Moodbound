@@ -2,7 +2,7 @@ import asyncio
 from llama_index.llms.openai import OpenAI
 from backend.app.ai_config import configure_ai_settings
 from llama_index.core.settings import Settings
-from vibe_router import AgenticRouter
+from agentic_router import AgenticRouter
 
 def test_modular_router():
     configure_ai_settings()

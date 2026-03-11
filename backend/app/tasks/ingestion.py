@@ -13,7 +13,7 @@ from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.core.settings import Settings
 from llama_index.core.schema import TextNode
 
-from vibe_router import AgenticRouter
+from agentic_router import AgenticRouter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -116,11 +116,17 @@ async def process_document(ctx, document_id: str):
                 batch = sampled_nodes[i : i + CHUNKS_PER_BATCH]
                 batches.append("\n\n...[SCENE BREAK]...\n\n".join(n.text for n in batch))
 
-            logger.info(f"Firing {len(batches)} concurrent NER batches...")
+            logger.info(f"Firing {len(batches)} NER batches with Semaphore concurrency limit of 3...")
 
-            # Launch all extraction calls simultaneously
+            semaphore = asyncio.Semaphore(3)
+
+            async def sem_extract(text_batch):
+                async with semaphore:
+                    return await _extract_relationships(text_batch)
+
+            # Launch extraction calls with strict concurrency limits
             results = await asyncio.gather(
-                *[_extract_relationships(text) for text in batches],
+                *[sem_extract(text) for text in batches],
                 return_exceptions=True,
             )
 

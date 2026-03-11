@@ -58,7 +58,7 @@ def write_triplets(document_id: str, user_id: str, triplets: list[dict]):
     logger.info(f"Wrote {len(triplets)} triplets to Neo4j for document {document_id}")
 
 
-def get_graph(document_id: str) -> dict:
+def get_graph(document_id: str, user_id: str) -> dict:
     """
     Retrieve all character nodes and relationship edges for a given document.
     Returns: {"nodes": [{"id": ..., "label": ...}], "edges": [{"source": ..., "target": ..., "label": ...}]}

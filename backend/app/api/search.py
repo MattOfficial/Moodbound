@@ -9,7 +9,7 @@ from ..vector_store import get_vector_store
 from ..graph_store import get_triplets_for_characters
 from ..auth import get_current_user
 from ..models import User
-from vibe_router import AgenticRouter
+from agentic_router import AgenticRouter
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

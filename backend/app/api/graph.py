@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from ..graph_store import get_graph
+from ..auth import get_current_user
+from ..models import User
 
 router = APIRouter()
 
@@ -55,13 +57,13 @@ def _color_for_relationship(rel: str) -> str:
 
 
 @router.get("/{document_id}")
-def get_document_graph(document_id: str):
+def get_document_graph(document_id: str, current_user: User = Depends(get_current_user)):
     """
     Returns the character relationship graph for a given document.
     Response: {nodes: [{id, label}], edges: [{source, target, label, color}]}
     """
     try:
-        graph = get_graph(document_id)
+        graph = get_graph(document_id, str(current_user.id))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to query Neo4j: {str(e)}")
 
