@@ -37,9 +37,17 @@ This stack is chosen to reflect modern, production-ready Full-Stack AI Developme
 * **Cascading Data Cleanup:** When a document is deleted, ensuring its text chunks are removed from Qdrant and its entities/relationships are pruned from Neo4j.
 
 ## 5. Development Workflow
-The system should be built in the following phases:
+The system is being built in the following phases:
+
+**✅ Completed MVP Milestones:**
 1.  **Infrastructure:** `docker-compose.yml` for PostgreSQL, Qdrant, Neo4j, and Redis.
 2.  **Document Upload MVP:** PostgreSQL `documents` table schema, FastAPI upload endpoint, raw file storage, and React upload UI with drag-and-drop.
 3.  **Data Ingestion Pipeline:** FastAPI endpoints handing off heavy PDF/EPUB/TXT parsing to Redis background workers. Includes narrative chunking, embedding generation, NER, and graph population.
 4.  **Retrieval Engine:** Implementing LlamaIndex routers to query Qdrant and Neo4j.
 5.  **Frontend Integration:** Connecting the React app to the FastAPI backend, rendering the interactive graph, and building the document library and detail pages.
+
+**🚀 Upcoming Production Readiness Phases:**
+6.  **Multi-Tenancy & Security:** Implement JWT Authentication, update Qdrant payload filters to isolate vectors by `user_id`, isolate Neo4j graph nodes, and add API rate-limiting/guardrails.
+7.  **Platform Extraction:** Extract reusable, domain-agnostic logic (like the custom narrative chunker and agentic LLM router) into modular `npm` or `pip` packages (similar to the successful extraction of `vibe-particles`).
+8.  **Performance UX:** Implement a Semantic Caching Layer (Redis) for repeat queries and introduce Server-Sent Events (SSE) to stream generation text live to the UI.
+9.  **Retrieval Mastery & LLMOps:** Integrate tools like Langfuse for comprehensive tracing/observability, implement Query Rewriting (HyDE) for vague queries, and introduce a cross-encoder reranker to improve context relevance before synthesis.

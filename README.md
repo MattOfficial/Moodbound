@@ -7,6 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
+[![vibe-particles](https://img.shields.io/npm/v/vibe-particles?color=cb3837&label=npm&logo=npm)](https://www.npmjs.com/package/vibe-particles)
 [![Gemini](https://img.shields.io/badge/Gemini-API-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev)
 [![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?style=flat&logo=openai&logoColor=white)](https://platform.openai.com)
 [![DeepSeek](https://img.shields.io/badge/DeepSeek-API-4D6BFE?style=flat&logo=deepseek&logoColor=white)](https://deepseek.com)
@@ -21,6 +22,8 @@
 ## 🎯 What is this?
 
 Moodbound is a full-stack AI application that goes far beyond a traditional search engine. Instead of matching keywords, it understands the **semantic meaning, mood, and emotional context** of your novel collection using vector embeddings and Retrieval-Augmented Generation (RAG).
+
+**🎉 Phase 1-5 MVP Complete:** The core ingestion, hybrid search, and interactive UI pipelines are fully operational.
 
 Upload a novel. Ask about a vibe. Get back the exact scene, excerpt, and AI-synthesized explanation — with source attribution.
 
@@ -74,7 +77,7 @@ graph TD
 |---|---|---|
 | **Frontend** | React 19 + Vite + TypeScript | SPA with glassmorphic UI |
 | **Styling** | Tailwind CSS | Dynamic, vibe-reactive styling |
-| **Visual Effects** | vibe-particles NPM | Custom WebGL/Canvas autonomous particle physics engine |
+| **Visual Effects** | [`vibe-particles` NPM](https://www.npmjs.com/package/vibe-particles) | Extracted, standalone WebGL autonomous particle physics engine |
 | **Backend** | Python + FastAPI | REST API & orchestration |
 | **AI Orchestration** | LlamaIndex | RAG pipeline, query engine |
 | **LLM / Embeddings** | DeepSeek / OpenAI / Gemini | Synthesis, embeddings, NER extraction |
@@ -228,12 +231,17 @@ sequenceDiagram
 
 ---
 
-## 🗺️ Roadmap
+## 🗺️ Roadmap (Path to Production)
+
+With the MVP complete, development is now focused on enterprise readiness and platform extraction:
 
 - [x] **Hybrid Search (Reciprocal Rank Fusion)** — combined dense + sparse BM25 retrieval
 - [x] **Vibe-Reactive UI** — color palette and particle physics shift to match the emotional tone of results
-- [ ] **GraphRAG Queries** — route relationship questions to Neo4j instead of Qdrant
-- [ ] **Streaming Chat Responses** — Stream text blocks live to UI to hide API latency
+- [x] **Extract Visual Engine** — Open-sourced the `vibe-particles` canvas engine to npm ([vibe-particles](https://www.npmjs.com/package/vibe-particles))
+- [ ] **Phase 6: Multi-Tenancy & Security** — JWT Auth, user-isolated Qdrant/Neo4j payloads, and API rate limiting
+- [ ] **Phase 7: Platform Extraction** — Factor out complex backend logic (Agentic Router, Chunker) into reusable pip packages
+- [ ] **Phase 8: Performance UX** — Semantic Redis Cache for repeat queries, streaming SSE text responses
+- [ ] **Phase 9: Retrieval & LLMOps** — Integrate Langfuse for observability, query rewriting (HyDE), and cross-encoder reranking
 
 ---
 
