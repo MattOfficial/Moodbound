@@ -38,6 +38,7 @@ Upload a novel. Ask about a vibe. Get back the exact scene, excerpt, and AI-synt
 | 🔄 **Async Ingestion Pipeline** | ✅ Complete | Background ARQ workers handle heavy embedding work |
 | ✂️ **Narrative Chunking** | ✅ Complete | Splits text by paragraph/scene boundaries, not blind tokens |
 | 🗂️ **AI Auto-Categorization** | ✅ Complete | LLM classifies genre automatically on ingest |
+| 👤 **User Profiles & Auth** | ✅ Complete | JWT login, custom avatars, and secure password hashing |
 | 📚 **Library Management** | ✅ Complete | View/delete books with real-time processing status |
 | 🔌 **Decoupled AI Providers** | ✅ Complete | Mix/match LLMs and Embeddings (`deepseek` + `gemini`) |
 | 🌐 **Knowledge Graph** | ✅ Complete | Neo4j character relationship graph with d3-force clustering |
@@ -238,7 +239,7 @@ With the MVP complete, development is now focused on enterprise readiness and pl
 - [x] **Hybrid Search (Reciprocal Rank Fusion)** — combined dense + sparse BM25 retrieval
 - [x] **Vibe-Reactive UI** — color palette and particle physics shift to match the emotional tone of results
 - [x] **Extract Visual Engine** — Open-sourced the `vibe-particles` canvas engine to npm ([vibe-particles](https://www.npmjs.com/package/vibe-particles))
-- [ ] **Phase 6: Multi-Tenancy & Security** — JWT Auth, user-isolated Qdrant/Neo4j payloads, and API rate limiting
+- [x] **Phase 6: Multi-Tenancy & Security** — JWT Auth, user-isolated profiles, local avatar uploads, and UI consolidation
 - [ ] **Phase 7: Platform Extraction** — Factor out complex backend logic (Agentic Router, Chunker) into reusable pip packages
 - [ ] **Phase 8: Performance UX** — Semantic Redis Cache for repeat queries, streaming SSE text responses
 - [ ] **Phase 9: Retrieval & LLMOps** — Integrate Langfuse for observability, query rewriting (HyDE), and cross-encoder reranking

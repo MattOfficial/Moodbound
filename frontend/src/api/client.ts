@@ -74,3 +74,37 @@ export const getGraph = async (documentId: string): Promise<GraphResponse> => {
     const response = await apiClient.get(`/graph/${documentId}`);
     return response.data;
 };
+
+export interface UserProfile {
+    id: string;
+    email: string;
+    nickname?: string | null;
+    profile_picture_url?: string | null;
+}
+
+export interface UserProfileUpdateParams {
+    nickname?: string;
+    profile_picture_url?: string;
+    password?: string;
+}
+
+export const getUserProfile = async (): Promise<UserProfile> => {
+    const response = await apiClient.get<UserProfile>('/auth/me');
+    return response.data;
+};
+
+export const updateUserProfile = async (data: UserProfileUpdateParams): Promise<UserProfile> => {
+    const response = await apiClient.put<UserProfile>('/auth/me', data);
+    return response.data;
+};
+
+export const uploadAvatar = async (file: File): Promise<UserProfile> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<UserProfile>('/auth/me/avatar', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};

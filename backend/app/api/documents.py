@@ -6,7 +6,8 @@ import shutil
 import uuid
 
 from ..database import get_db
-from ..models import Document
+from ..models import Document, User
+from ..auth import get_current_user
 from ..redis_config import redis_settings
 from ..graph_store import delete_graph
 
@@ -17,7 +18,12 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/")
-async def upload_document(file: UploadFile = File(...), genre: str = "Uncategorized", db: Session = Depends(get_db)):
+async def upload_document(
+    file: UploadFile = File(...),
+    genre: str = "Uncategorized",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Endpoint to receive a novel file upload.
     It saves the file locally and creates a 'Pending' record in PostgreSQL.
@@ -38,8 +44,9 @@ async def upload_document(file: UploadFile = File(...), genre: str = "Uncategori
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
-    # Create DB Record
+    # Create DB Record attached to current API user
     new_doc = Document(
+        user_id=current_user.id,
         filename=file.filename,
         content_type=file.content_type,
         file_path=file_path,
@@ -70,12 +77,15 @@ async def upload_document(file: UploadFile = File(...), genre: str = "Uncategori
 
 
 @router.get("/")
-def list_documents(db: Session = Depends(get_db)):
+def list_documents(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Returns a list of all uploaded documents from PostgreSQL.
     Used by the Library page to show real-time processing status.
     """
-    docs = db.query(Document).order_by(Document.created_at.desc()).all()
+    docs = db.query(Document).filter(Document.user_id == current_user.id).order_by(Document.created_at.desc()).all()
     return [
         {
             "id": str(doc.id),
@@ -89,7 +99,11 @@ def list_documents(db: Session = Depends(get_db)):
 
 
 @router.delete("/{document_id}")
-def delete_document(document_id: str, db: Session = Depends(get_db)):
+def delete_document(
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Deletes a document record from PostgreSQL and removes the file from disk.
     """
@@ -98,7 +112,8 @@ def delete_document(document_id: str, db: Session = Depends(get_db)):
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid document ID format.")
 
-    doc = db.query(Document).filter(Document.id == doc_uuid).first()
+    # Ensure user owns this document before taking any action
+    doc = db.query(Document).filter(Document.id == doc_uuid, Document.user_id == current_user.id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found.")
 

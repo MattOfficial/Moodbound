@@ -24,7 +24,7 @@ def _get_driver():
     return _driver
 
 
-def write_triplets(document_id: str, triplets: list[dict]):
+def write_triplets(document_id: str, user_id: str, triplets: list[dict]):
     """
     Write relationship triplets to Neo4j.
     Each triplet: {"source": "Alice", "relationship": "betrayed", "target": "Bob"}
@@ -41,14 +41,15 @@ def write_triplets(document_id: str, triplets: list[dict]):
                 continue
             tx.run(
                 """
-                MERGE (a:Character {name: $source, document_id: $doc_id})
-                MERGE (b:Character {name: $target, document_id: $doc_id})
-                CREATE (a)-[:RELATES_TO {type: $rel, document_id: $doc_id}]->(b)
+                MERGE (a:Character {name: $source, document_id: $doc_id, user_id: $user_id})
+                MERGE (b:Character {name: $target, document_id: $doc_id, user_id: $user_id})
+                CREATE (a)-[:RELATES_TO {type: $rel, document_id: $doc_id, user_id: $user_id}]->(b)
                 """,
                 source=source,
                 target=target,
                 rel=relationship,
                 doc_id=document_id,
+                user_id=user_id,
             )
 
     with driver.session() as session:
@@ -70,10 +71,11 @@ def get_graph(document_id: str) -> dict:
     with driver.session() as session:
         result = session.run(
             """
-            MATCH (a:Character {document_id: $doc_id})-[r:RELATES_TO {document_id: $doc_id}]->(b:Character {document_id: $doc_id})
+            MATCH (a:Character {document_id: $doc_id, user_id: $user_id})-[r:RELATES_TO {document_id: $doc_id, user_id: $user_id}]->(b:Character {document_id: $doc_id, user_id: $user_id})
             RETURN a.name AS source, r.type AS relationship, b.name AS target
             """,
             doc_id=document_id,
+            user_id=user_id,
         )
         for record in result:
             src = record["source"]
@@ -108,10 +110,10 @@ def delete_graph(document_id: str):
         )
     logger.info(f"Deleted graph data for document {document_id}")
 
-def get_triplets_for_characters(names: list[str]) -> list[str]:
+def get_triplets_for_characters(names: list[str], user_id: str) -> list[str]:
     """
     Given a list of character names, search the Neo4j graph for any relationships
-    involving those characters. Returns a list of formatted string triplets.
+    involving those characters belonging to this specific user. Returns a list of formatted string triplets.
     """
     if not names:
         return []

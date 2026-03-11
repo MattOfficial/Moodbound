@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 import logging
 
@@ -7,6 +7,8 @@ from llama_index.core.settings import Settings
 
 from ..vector_store import get_vector_store
 from ..graph_store import get_triplets_for_characters
+from ..auth import get_current_user
+from ..models import User
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -15,7 +17,10 @@ class SearchQuery(BaseModel):
     query: str
 
 @router.post("/")
-async def search_novels(search_query: SearchQuery):
+async def search_novels(
+    search_query: SearchQuery,
+    current_user: User = Depends(get_current_user)
+):
     """
     Endpoint to perform a 'Vibe Search' across all ingested novels.
     It converts the query to a vector, finds the nearest chunks in Qdrant,
@@ -54,11 +59,22 @@ async def search_novels(search_query: SearchQuery):
             vector_store = get_vector_store()
             index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
 
-            logger.info("Executing hybrid search (Dense + BM25) against Qdrant...")
+            from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters, FilterOperator
+
+            logger.info(f"Executing scoped hybrid search (user={current_user.id}) against Qdrant...")
+
+            # CRITICAL: Isolate vector query to the user's uploaded documents only!
+            filters = MetadataFilters(
+                filters=[
+                    MetadataFilter(key="user_id", operator=FilterOperator.EQ, value=str(current_user.id)),
+                ]
+            )
+
             query_engine = index.as_query_engine(
                 similarity_top_k=3,
                 vector_store_query_mode="hybrid",
-                alpha=0.5
+                alpha=0.5,
+                filters=filters
             )
 
             # Extract "Vibe" category
@@ -111,7 +127,8 @@ async def search_novels(search_query: SearchQuery):
             if entities_str.lower() != 'none':
                 names = [n.strip() for n in entities_str.split(',') if n.strip()]
 
-            triplets = get_triplets_for_characters(names)
+            # Pass the user down so Neo4j filters relationship by the owner
+            triplets = get_triplets_for_characters(names, user_id=str(current_user.id))
 
             if not triplets:
                 # Fallback gently

@@ -136,7 +136,7 @@ export const Home: React.FC = () => {
                             ) : (
                                 <div className="flex flex-col items-center gap-3 py-8 text-[var(--text-muted)]">
                                     <BookOpen size={36} className="opacity-30" />
-                                    <p className="text-center">No matching passages found. Try uploading more novels via the <span className="cursor-pointer underline underline-offset-2 transition-colors duration-1000" style={{ color: activeHex }} onClick={() => window.location.href = '/library'}>Library</span>.</p>
+                                    <p className="text-center">No matching passages found. Try uploading more novels via your <span className="cursor-pointer underline underline-offset-2 transition-colors duration-1000" style={{ color: activeHex }} onClick={() => window.location.href = '/profile'}>Profile</span>.</p>
                                 </div>
                             )}
                         </div>

@@ -11,6 +11,7 @@ import json
 
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.core.settings import Settings
+from llama_index.core.schema import TextNode
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -103,6 +104,12 @@ async def process_document(ctx, document_id: str):
 
         # 4. Generate Embeddings → Qdrant
         logger.info(f"Generating vectors for {len(nodes)} chunks...")
+
+        # Inject user_id into every node's metadata so Qdrant can filter by it
+        for node in nodes:
+            if isinstance(node, TextNode):
+                node.metadata["user_id"] = str(doc.user_id)
+
         vector_store = get_vector_store()
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         VectorStoreIndex(nodes, storage_context=storage_context)
@@ -142,7 +149,7 @@ async def process_document(ctx, document_id: str):
             for idx, triplets in enumerate(results):
                 if isinstance(triplets, Exception) or not triplets:
                     continue
-                write_triplets(document_id, triplets)
+                write_triplets(document_id, str(doc.user_id), triplets)
                 total_written += len(triplets)
                 logger.info(f"Batch {idx + 1}: wrote {len(triplets)} triplets to Neo4j.")
 
