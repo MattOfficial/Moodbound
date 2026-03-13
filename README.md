@@ -35,8 +35,8 @@ The core app is working end to end. It is not fully production-hardened yet, and
 | 🔄 **Async Ingestion Pipeline** | Shipped | FastAPI hands work to Redis + ARQ workers |
 | ✂️ **Narrative Chunking** | Shipped | Uses `narrative-chunker` with semantic splitting and sentence fallback |
 | 🗂️ **AI Auto-Categorization** | Shipped | Genre classification runs during ingestion |
-| 👤 **Auth & Profiles** | Shipped, hardening pending | JWT auth, profile editing, local avatar uploads |
-| 📚 **Library Management** | Partial | Listing and status polling work; delete does not yet purge Qdrant vectors |
+| 👤 **Auth & Profiles** | Shipped | JWT auth, profile editing, and local avatar uploads |
+| 📚 **Library Management** | Shipped | Listing, status polling, and delete cleanup across SQL, Qdrant, Neo4j, and local files |
 | 🌐 **Knowledge Graph** | Beta | Neo4j-backed extraction, graph view, and graph-routed answers are wired up |
 | 🔌 **Decoupled AI Providers** | Shipped | Provider/model strings can split embeddings and LLM generation |
 | 🎨 **Vibe-Reactive UI** | Shipped | Search results drive color theme and particle preset changes |
@@ -45,9 +45,9 @@ The core app is working end to end. It is not fully production-hardened yet, and
 
 ### Known Gaps
 
-- Deleting a document currently removes the file, SQL row, and Neo4j graph data, but not its Qdrant vectors yet.
-- Graph-routed relationship queries still need tenant-isolation hardening.
-- The frontend currently builds successfully, but `npm run lint` is not clean yet.
+- There is no end-to-end smoke or integration suite yet; the current safety net is strong unit/component coverage plus CI gates.
+- Service bootstrap paths like `app.main` and `app.worker` are not deeply tested; they are still validated through local startup and workflow runs.
+- Profile avatars are still stored on the local filesystem rather than an object store.
 
 ---
 
@@ -211,6 +211,48 @@ AI_PROVIDER=gemini
 EMBEDDING_MODEL=openai/text-embedding-3-small
 FAST_LLM_MODEL=deepseek/deepseek-chat
 ```
+
+---
+
+## Testing And Quality Gates
+
+### Frontend
+
+```bash
+cd frontend
+npm run verify
+```
+
+This runs lint, coverage, and production build checks. The coverage report is written to `frontend/coverage/`.
+
+### Backend
+
+```powershell
+pwsh -File .\scripts\test-backend.ps1
+pwsh -File .\scripts\test-backend-coverage.ps1
+```
+
+The coverage script enforces the backend threshold from `.coveragerc` and writes the HTML report to `backend/coverage/`.
+
+### Git Hooks
+
+Install local hooks once per clone:
+
+```bash
+pre-commit install --hook-type pre-commit --hook-type pre-push
+```
+
+Current local gates:
+
+- `pre-commit`: frontend coverage + backend coverage
+- `pre-push`: frontend verify + backend coverage
+
+### CI
+
+GitHub Actions runs the same quality checks for repository changes:
+
+- `.github/workflows/frontend-quality.yml`
+- `.github/workflows/backend-quality.yml`
 
 ---
 
