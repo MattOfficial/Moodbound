@@ -6,7 +6,12 @@ from narrative_chunker import NarrativeChunker
 
 logger = logging.getLogger(__name__)
 
-def parse_and_chunk_document(file_path: str, filename: str, user_id: str = None):
+def parse_and_chunk_document(
+    file_path: str,
+    filename: str,
+    user_id: str | None = None,
+    document_id: str | None = None,
+):
     """
     Parses a physical file into LlamaIndex Document objects and chunks it
     using state-of-the-art Semantic Splitter from LlamaIndex.
@@ -21,6 +26,8 @@ def parse_and_chunk_document(file_path: str, filename: str, user_id: str = None)
     metadata = {}
     if user_id:
         metadata["user_id"] = user_id
+    if document_id:
+        metadata["document_id"] = document_id
 
     # Prefer semantic chunking, but gracefully fall back if embedding pre-pass fails
     # (e.g., provider-side 400 on malformed/oversized sentence candidates).

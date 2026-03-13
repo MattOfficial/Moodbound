@@ -1,21 +1,45 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ForceGraph2D from 'react-force-graph-2d';
-import type { ForceGraphMethods } from 'react-force-graph-2d';
-import { getGraph } from '../api/client';
+import type { ForceGraphMethods, LinkObject, NodeObject } from 'react-force-graph-2d';
+import { getErrorMessage, getGraph } from '../api/client';
 import { ArrowLeft, Loader2, Network } from 'lucide-react';
+
+type GraphNode = {
+    id: string;
+    name: string;
+    val: number;
+};
+
+type GraphLinkData = {
+    label: string;
+    color: string;
+};
+
+type GraphNodeObject = NodeObject<GraphNode>;
+type GraphLinkObject = LinkObject<GraphNode, GraphLinkData>;
+type GraphCanvasData = {
+    nodes: GraphNodeObject[];
+    links: GraphLinkObject[];
+};
+
+const getNodeId = (value: string | number | GraphNodeObject | undefined): string => {
+    if (typeof value === 'object') {
+        return value?.id != null ? String(value.id) : '';
+    }
+    return value != null ? String(value) : '';
+};
 
 export const Graph = () => {
     const { documentId } = useParams<{ documentId: string }>();
-    const [graphData, setGraphData] = useState<{ nodes: any[], links: any[] }>({ nodes: [], links: [] });
+    const [graphData, setGraphData] = useState<GraphCanvasData>({ nodes: [], links: [] });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [hoverNode, setHoverNode] = useState<string | null>(null);
     const isFirstLoad = useRef(true);
     const graphSignature = useRef<number>(0);
-    const fgRef = useRef<ForceGraphMethods>(null);
+    const fgRef = useRef<ForceGraphMethods<NodeObject<GraphNode>, LinkObject<GraphNode, GraphLinkData>> | undefined>(undefined);
 
-    // For auto-resize
     const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
 
     useEffect(() => {
@@ -32,10 +56,13 @@ export const Graph = () => {
                 if (isFirstLoad.current) {
                     setLoading(true);
                 }
+
                 const data = await getGraph(documentId);
 
                 if (data.message) {
-                    if (isFirstLoad.current) setError(data.message);
+                    if (isFirstLoad.current) {
+                        setError(data.message);
+                    }
                     return;
                 }
 
@@ -47,37 +74,32 @@ export const Graph = () => {
                 }
                 graphSignature.current = currentSignature;
 
-                // Format for react-force-graph
-                const nodes = data.nodes.map((n: any) => ({
-                    id: n.id,
-                    name: n.label,
-                    val: 1 // Default size
+                const nodes: GraphNodeObject[] = data.nodes.map((node) => ({
+                    id: node.id,
+                    name: node.label,
+                    val: 1,
                 }));
 
-                // Filter invalid links safely
-                const nodeIds = new Set(nodes.map((n: any) => n.id));
-                const links = data.edges
-                    .filter((e: any) => nodeIds.has(e.source) && nodeIds.has(e.target))
-                    .map((e: any) => ({
-                        source: e.source,
-                        target: e.target,
-                        label: e.label,
-                        color: e.color || '#475569'
+                const nodeIds = new Set(nodes.map((node) => getNodeId(node.id)));
+                const links: GraphLinkObject[] = data.edges
+                    .filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
+                    .map((edge) => ({
+                        source: edge.source,
+                        target: edge.target,
+                        label: edge.label,
+                        color: edge.color || '#475569',
                     }));
 
                 setGraphData({ nodes, links });
 
                 if (isFirstLoad.current && fgRef.current) {
-                    // Start physics forcefully isolated to center
                     setTimeout(() => {
-                        // 400ms duration, 50px padding from the canvas edges
                         fgRef.current?.zoomToFit(400, 150);
                     }, 500);
                 }
-
-            } catch (err: any) {
-                console.error("Failed to load graph:", err);
-                setError(err.response?.data?.detail || "Failed to load relationship graph.");
+            } catch (error: unknown) {
+                console.error('Failed to load graph:', error);
+                setError(getErrorMessage(error, 'Failed to load relationship graph.'));
             } finally {
                 if (isFirstLoad.current) {
                     setLoading(false);
@@ -86,89 +108,90 @@ export const Graph = () => {
             }
         };
 
-        loadGraph();
-        const intervalId = setInterval(loadGraph, 5000);
+        void loadGraph();
+        const intervalId = setInterval(() => {
+            void loadGraph();
+        }, 5000);
+
         return () => clearInterval(intervalId);
     }, [documentId]);
 
-    // Obsidian hover logic adjacency sets
     const { connectedNodes, connectedLinks } = useMemo(() => {
-        const links = new Set<any>();
+        const links = new Set<GraphLinkObject>();
         const nodes = new Set<string>();
 
         if (hoverNode) {
             nodes.add(hoverNode);
-            graphData.links.forEach((link: any) => {
-                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+            graphData.links.forEach((link) => {
+                const sourceId = getNodeId(link.source);
+                const targetId = getNodeId(link.target);
 
                 if (sourceId === hoverNode || targetId === hoverNode) {
                     links.add(link);
-                    nodes.add(sourceId);
-                    nodes.add(targetId);
+                    if (sourceId) nodes.add(sourceId);
+                    if (targetId) nodes.add(targetId);
                 }
             });
         }
+
         return { connectedNodes: nodes, connectedLinks: links };
     }, [graphData.links, hoverNode]);
 
-    // Custom Canvas rendering functions
-    const paintNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-        const isHovered = node.id === hoverNode;
-        const isConnected = hoverNode ? connectedNodes.has(node.id) : true;
+    const paintNode = useCallback((node: GraphNodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
+        const nodeId = getNodeId(node.id);
+        const nodeX = node.x ?? 0;
+        const nodeY = node.y ?? 0;
+        const isHovered = nodeId === hoverNode;
+        const isConnected = hoverNode ? connectedNodes.has(nodeId) : true;
 
         const label = node.name;
         const fontSize = 12 / globalScale;
         ctx.font = `500 ${fontSize}px Sans-Serif`;
         const textWidth = ctx.measureText(label).width;
-        const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 1.5) as [number, number];
+        const bckgDimensions = [textWidth, fontSize].map((size) => size + fontSize * 1.5) as [number, number];
 
-        // Draw node disc backing
         ctx.fillStyle = isConnected ? 'rgba(15, 23, 42, 0.95)' : 'rgba(15, 23, 42, 0.15)';
         ctx.beginPath();
         if (ctx.roundRect) {
             ctx.roundRect(
-                node.x - bckgDimensions[0] / 2,
-                node.y - bckgDimensions[1] / 2,
+                nodeX - bckgDimensions[0] / 2,
+                nodeY - bckgDimensions[1] / 2,
                 bckgDimensions[0],
                 bckgDimensions[1],
-                8 / globalScale
+                8 / globalScale,
             );
         } else {
             ctx.rect(
-                node.x - bckgDimensions[0] / 2,
-                node.y - bckgDimensions[1] / 2,
+                nodeX - bckgDimensions[0] / 2,
+                nodeY - bckgDimensions[1] / 2,
                 bckgDimensions[0],
-                bckgDimensions[1]
+                bckgDimensions[1],
             );
         }
         ctx.fill();
 
-        // Draw border
         ctx.strokeStyle = isHovered
             ? 'rgba(167, 139, 250, 0.9)'
             : (isConnected ? 'rgba(148, 163, 184, 0.4)' : 'rgba(148, 163, 184, 0.05)');
         ctx.lineWidth = isHovered ? 2 / globalScale : 1 / globalScale;
         ctx.stroke();
 
-        // Draw text
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = isConnected ? '#f8fafc' : 'rgba(248, 250, 252, 0.15)';
-        ctx.fillText(label, node.x, node.y);
-    }, [hoverNode, connectedNodes]);
+        ctx.fillText(label, nodeX, nodeY);
+    }, [connectedNodes, hoverNode]);
 
-    const getLinkColor = useCallback((link: any) => {
+    const getLinkColor = useCallback((link: GraphLinkObject) => {
         if (!hoverNode) return 'rgba(71, 85, 105, 0.3)';
         return connectedLinks.has(link) ? 'rgba(139, 92, 246, 0.8)' : 'rgba(71, 85, 105, 0.05)';
-    }, [hoverNode, connectedLinks]);
+    }, [connectedLinks, hoverNode]);
 
-    const getLinkWidth = useCallback((link: any) => {
+    const getLinkWidth = useCallback((link: GraphLinkObject) => {
         if (!hoverNode) return 1.5;
         return connectedLinks.has(link) ? 2.5 : 0.5;
-    }, [hoverNode, connectedLinks]);
+    }, [connectedLinks, hoverNode]);
 
-    // Ensure Physics layout parameters are tuned correctly when data changes
     useEffect(() => {
         if (fgRef.current) {
             fgRef.current.d3Force('charge')?.strength(-400);
@@ -178,7 +201,6 @@ export const Graph = () => {
 
     return (
         <div className="w-screen h-screen bg-[#0f131f] text-white flex flex-col overflow-hidden">
-            {/* Header Overlay */}
             <div className="absolute top-0 w-full p-8 z-10 flex justify-between items-center bg-gradient-to-b from-[#0f131f] to-transparent pointer-events-none">
                 <Link to="/library" className="group flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all pointer-events-auto backdrop-blur-md">
                     <ArrowLeft size={18} className="text-white/70 group-hover:-translate-x-1 transition-transform" />
@@ -196,7 +218,6 @@ export const Graph = () => {
                 </div>
             </div>
 
-            {/* Canvas */}
             <div className="absolute inset-0 cursor-move">
                 {loading ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-5">
@@ -215,18 +236,20 @@ export const Graph = () => {
                         <p className="text-white/60 max-w-md leading-relaxed">{error}</p>
                     </div>
                 ) : (
-                    <ForceGraph2D
-                        ref={fgRef as any}
+                    <ForceGraph2D<GraphNode, GraphLinkData>
+                        ref={fgRef}
                         graphData={graphData}
                         width={dimensions.width}
                         height={dimensions.height}
                         backgroundColor="#0f131f"
                         nodeCanvasObject={paintNode}
-                        nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
-                            // Creates a generous invisible hover hotbox around the node text
+                        nodePointerAreaPaint={(node: GraphNodeObject, color: string, ctx: CanvasRenderingContext2D) => {
+                            const nodeX = node.x ?? 0;
+                            const nodeY = node.y ?? 0;
+
                             ctx.fillStyle = color;
                             ctx.beginPath();
-                            ctx.arc(node.x, node.y, 15, 0, 2 * Math.PI, false);
+                            ctx.arc(nodeX, nodeY, 15, 0, 2 * Math.PI, false);
                             ctx.fill();
                         }}
                         linkColor={getLinkColor}
@@ -234,15 +257,18 @@ export const Graph = () => {
                         linkDirectionalArrowLength={4}
                         linkDirectionalArrowRelPos={1}
                         linkCanvasObjectMode={() => 'after'}
-                        linkCanvasObject={(link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+                        linkCanvasObject={(link: GraphLinkObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
                             const start = link.source;
                             const end = link.target;
                             if (typeof start !== 'object' || typeof end !== 'object') return;
 
+                            const startX = start.x ?? 0;
+                            const startY = start.y ?? 0;
+                            const endX = end.x ?? 0;
+                            const endY = end.y ?? 0;
                             const isHovered = hoverNode ? connectedLinks.has(link) : false;
                             const isGraphHovered = hoverNode !== null;
 
-                            // Hide un-hovered labels for cleaner UI when interacting
                             if (isGraphHovered && !isHovered) return;
 
                             const label = link.label;
@@ -251,15 +277,13 @@ export const Graph = () => {
                             const fontSize = 10 / globalScale;
                             ctx.font = `500 ${fontSize}px Sans-Serif`;
 
-                            // Calculate position
                             const textPos = {
-                                x: start.x + (end.x - start.x) / 2,
-                                y: start.y + (end.y - start.y) / 2
+                                x: startX + (endX - startX) / 2,
+                                y: startY + (endY - startY) / 2,
                             };
 
-                            const relLink = { x: end.x - start.x, y: end.y - start.y };
+                            const relLink = { x: endX - startX, y: endY - startY };
                             let textAngle = Math.atan2(relLink.y, relLink.x);
-                            // Maintain label vertical orientation
                             if (textAngle > Math.PI / 2) textAngle = -(Math.PI - textAngle);
                             if (textAngle < -Math.PI / 2) textAngle = -(-Math.PI - textAngle);
 
@@ -267,22 +291,19 @@ export const Graph = () => {
                             ctx.translate(textPos.x, textPos.y);
                             ctx.rotate(textAngle);
 
-                            // Background bounding box for text
                             const textWidth = ctx.measureText(label).width;
-                            const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.4);
+                            const bckgDimensions = [textWidth, fontSize].map((size) => size + fontSize * 0.4);
 
                             ctx.fillStyle = isHovered ? 'rgba(15, 23, 42, 0.95)' : 'rgba(15, 23, 42, 0.6)';
                             ctx.fillRect(-bckgDimensions[0] / 2, -bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
 
-                            // Text fill
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
                             ctx.fillStyle = isHovered ? '#e2e8f0' : '#64748b';
                             ctx.fillText(label, 0, 0);
                             ctx.restore();
                         }}
-                        onNodeHover={(node) => setHoverNode(node ? (node.id as string) : null)}
-                        // Subtle inertia
+                        onNodeHover={(node) => setHoverNode(node?.id != null ? String(node.id) : null)}
                         d3VelocityDecay={0.2}
                     />
                 )}

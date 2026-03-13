@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BackgroundEffect } from '../components/BackgroundEffect';
 import { Navbar } from '../components/Navbar';
 import { SearchBar } from '../components/SearchBar';
-import { searchVibes, type SearchResponse, getSystemStatus, type SystemStatusResponse } from '../api/client';
+import { searchVibes, type SearchResponse, getSystemStatus, type SystemStatusResponse, getErrorMessage } from '../api/client';
 import { BookOpen, Network, Sparkles, MoveRight } from 'lucide-react';
 
 type VibeCategory = "Antigravity" | "Melancholic" | "Serene" | "Dark" | "Tense" | "Romantic" | "Epic" | "Mysterious" | "Happy" | "Neutral";
@@ -44,9 +44,9 @@ export const Home: React.FC = () => {
             if (data.vibe) {
                 setCurrentVibe(data.vibe as VibeCategory);
             }
-        } catch (err: any) {
-            console.error("Search failed:", err);
-            setError(err.message || 'An error occurred during search.');
+        } catch (error: unknown) {
+            console.error("Search failed:", error);
+            setError(getErrorMessage(error, 'An error occurred during search.'));
         } finally {
             setIsLoading(false);
         }

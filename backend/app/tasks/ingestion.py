@@ -291,7 +291,12 @@ async def process_document(ctx, document_id: str):
         db.commit()
 
         # 2. Narrative Chunking
-        raw_nodes = parse_and_chunk_document(doc.file_path, doc.filename, user_id=str(doc.user_id))
+        raw_nodes = parse_and_chunk_document(
+            doc.file_path,
+            doc.filename,
+            user_id=str(doc.user_id),
+            document_id=str(doc.id),
+        )
         nodes = _normalize_nodes_for_embedding(raw_nodes)
         if not nodes:
             raise RuntimeError("No valid chunks produced from parser output.")

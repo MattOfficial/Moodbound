@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { apiClient } from '../api/client';
+import { useAuth } from '../contexts/auth-context';
+import { apiClient, getErrorMessage } from '../api/client';
 import { LogIn, UserPlus } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 
 export default function Auth() {
   const { login, isAuthenticated } = useAuth();
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
 
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -17,6 +13,10 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +44,8 @@ export default function Auth() {
         const response = await apiClient.post('/auth/register', { email, password });
         login(response.data.access_token);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'An error occurred during authentication.');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'An error occurred during authentication.'));
     } finally {
       setIsLoading(false);
     }

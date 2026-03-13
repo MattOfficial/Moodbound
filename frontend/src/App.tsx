@@ -3,7 +3,8 @@ import { Home } from './pages/Home';
 import { Profile } from './pages/Profile';
 import { Graph } from './pages/Graph';
 import Auth from './pages/Auth';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './contexts/auth-context';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, LogOut, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth-context';
 
 export const Navbar: React.FC = () => {
     const { logout, profile } = useAuth();

@@ -94,7 +94,7 @@ def get_graph(document_id: str, user_id: str) -> dict:
     return {"nodes": nodes, "edges": edges}
 
 
-def delete_graph(document_id: str):
+def delete_graph(document_id: str, user_id: str):
     """
     Delete all character nodes and relationships for a given document.
     Used for cascading deletes when a document is removed.
@@ -103,10 +103,11 @@ def delete_graph(document_id: str):
     with driver.session() as session:
         session.run(
             """
-            MATCH (c:Character {document_id: $doc_id})
+            MATCH (c:Character {document_id: $doc_id, user_id: $user_id})
             DETACH DELETE c
             """,
             doc_id=document_id,
+            user_id=user_id,
         )
     logger.info(f"Deleted graph data for document {document_id}")
 
@@ -128,11 +129,15 @@ def get_triplets_for_characters(names: list[str], user_id: str) -> list[str]:
             """
             UNWIND $names AS name
             MATCH (a:Character)-[r:RELATES_TO]-(b:Character)
-            WHERE toLower(a.name) CONTAINS toLower(name) OR toLower(b.name) CONTAINS toLower(name)
+            WHERE a.user_id = $user_id
+              AND b.user_id = $user_id
+              AND r.user_id = $user_id
+              AND (toLower(a.name) CONTAINS toLower(name) OR toLower(b.name) CONTAINS toLower(name))
             RETURN DISTINCT a.name AS source, r.type AS rel, b.name AS target
             LIMIT 50
             """,
-            names=names
+            names=names,
+            user_id=user_id,
         )
         for record in result:
             src = record["source"]

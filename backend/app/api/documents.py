@@ -1,17 +1,21 @@
-from fastapi import APIRouter, File, UploadFile, Depends, HTTPException
-from sqlalchemy.orm import Session
-from arq import create_pool
+import logging
 import os
+from pathlib import Path
 import shutil
 import uuid
+from arq import create_pool
+from fastapi import APIRouter, File, UploadFile, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import Document, User
 from ..auth import get_current_user
-from ..redis_config import redis_settings
 from ..graph_store import delete_graph
+from ..redis_config import redis_settings
+from ..vector_store import delete_document_vectors
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 # Directory to temporarily store uploaded files before processing
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
@@ -32,11 +36,17 @@ async def upload_document(
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
 
-    file_extension = file.filename.split('.')[-1].lower()
+    original_filename = Path(file.filename).name
+    if not original_filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    file_extension = original_filename.split('.')[-1].lower()
     if file_extension not in ['pdf', 'epub', 'txt']:
         raise HTTPException(status_code=400, detail="Unsupported file format. Please upload PDF, EPUB, or TXT.")
 
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    document_id = uuid.uuid4()
+    stored_filename = f"{document_id}{Path(original_filename).suffix.lower()}"
+    file_path = os.path.join(UPLOAD_DIR, stored_filename)
 
     try:
         with open(file_path, "wb") as buffer:
@@ -46,8 +56,9 @@ async def upload_document(
 
     # Create DB Record attached to current API user
     new_doc = Document(
+        id=document_id,
         user_id=current_user.id,
-        filename=file.filename,
+        filename=original_filename,
         content_type=file.content_type,
         file_path=file_path,
         status="Pending",
@@ -65,9 +76,13 @@ async def upload_document(
         redis = await create_pool(redis_settings)
         await redis.enqueue_job('process_document', str(new_doc.id))
     except Exception as e:
-        # We log the error but still return success for the upload.
-        # The document is saved, so a retry mechanism could pick it up later.
-        print(f"Error enqueueing job to Redis: {e}")
+        logger.exception("Failed to enqueue document %s for processing", new_doc.id)
+        new_doc.status = "Failed"
+        db.commit()
+        raise HTTPException(
+            status_code=503,
+            detail="File was uploaded, but background processing could not be queued. The document was marked as Failed.",
+        ) from e
 
     return {
         "message": "File uploaded successfully and queued for processing.",
@@ -117,15 +132,28 @@ def delete_document(
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found.")
 
+    try:
+        legacy_vector_cleanup = None
+        if doc.file_path and os.path.basename(doc.file_path) == doc.filename:
+            legacy_vector_cleanup = doc.filename
+
+        delete_document_vectors(
+            document_id=str(doc.id),
+            user_id=str(current_user.id),
+            legacy_filename=legacy_vector_cleanup,
+        )
+        delete_graph(str(doc.id), str(current_user.id))
+    except Exception as e:
+        logger.exception("Failed to delete external data for document %s", doc.id)
+        raise HTTPException(status_code=500, detail="Failed to delete document data from external stores.") from e
+
     # Remove from disk if it still exists
     if doc.file_path and os.path.exists(doc.file_path):
-        os.remove(doc.file_path)
-
-    # Cascading delete for Neo4j entities
-    try:
-        delete_graph(str(doc.id))
-    except Exception as e:
-        print(f"Error deleting graph data: {e}")
+        try:
+            os.remove(doc.file_path)
+        except OSError as e:
+            logger.exception("Failed to remove file for document %s", doc.id)
+            raise HTTPException(status_code=500, detail="Failed to remove document file from disk.") from e
 
     db.delete(doc)
     db.commit()

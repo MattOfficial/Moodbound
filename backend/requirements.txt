@@ -5,6 +5,8 @@ alembic
 psycopg2-binary
 python-multipart
 python-dotenv
+python-jose[cryptography]
+bcrypt
 arq
 redis
 llama-index
@@ -12,11 +14,14 @@ llama-index-llms-openai
 llama-index-embeddings-openai
 llama-index-llms-gemini
 llama-index-embeddings-gemini
+llama-index-llms-deepseek
 qdrant-client
 llama-index-vector-stores-qdrant
 EbookLib
 html2text
 neo4j
+openai
+httpx
 pre-commit
 fastembed
 

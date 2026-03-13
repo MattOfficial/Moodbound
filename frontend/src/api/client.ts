@@ -7,6 +7,24 @@ export const apiClient = axios.create({
     },
 });
 
+export const getErrorMessage = (error: unknown, fallback: string): string => {
+    if (axios.isAxiosError(error)) {
+        const detail = error.response?.data?.detail;
+        if (typeof detail === 'string' && detail.trim()) {
+            return detail;
+        }
+        if (error.message) {
+            return error.message;
+        }
+    }
+
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+
+    return fallback;
+};
+
 export interface SearchResponse {
     answer: string;
     vibe?: string;

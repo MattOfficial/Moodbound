@@ -4,10 +4,14 @@ import { Navbar } from '../components/Navbar';
 import { Link, useLocation } from 'react-router-dom';
 import {
     uploadDocument, getDocuments, deleteDocument, type DocumentRecord,
-    getUserProfile, updateUserProfile, uploadAvatar
+    getUserProfile, updateUserProfile, uploadAvatar, getErrorMessage
 } from '../api/client';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth-context';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle, Clock, Loader2, Trash2, BookOpen, ChevronDown, ChevronRight, FolderOpen, Network, Settings, User, KeyRound, Image as ImageIcon } from 'lucide-react';
+
+type ProfileTab = 'library' | 'settings';
+type ProfileLocationState = { activeTab?: ProfileTab } | null;
+type ProfileMessage = { text: string; type: '' | 'success' | 'error' };
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 const StatusBadge: React.FC<{ status: DocumentRecord['status'] }> = ({ status }) => {
@@ -99,16 +103,17 @@ const GenreSection: React.FC<{
 export const Profile: React.FC = () => {
     const location = useLocation();
     const { profile, setProfile } = useAuth();
-    const [activeTab, setActiveTab] = useState<'library' | 'settings'>(
-        (location.state as any)?.activeTab || 'library'
+    const locationState = location.state as ProfileLocationState;
+    const [activeTab, setActiveTab] = useState<ProfileTab>(
+        locationState?.activeTab || 'library'
     );
 
     // Listen for changes when navigated to from Navbar while already on /profile
     useEffect(() => {
-        if ((location.state as any)?.activeTab) {
-            setActiveTab((location.state as any).activeTab);
+        if (locationState?.activeTab) {
+            setActiveTab(locationState.activeTab);
         }
-    }, [location.state]);
+    }, [locationState]);
 
     // User Profile Data
     const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -116,7 +121,7 @@ export const Profile: React.FC = () => {
     const [editPicUrl, setEditPicUrl] = useState('');
     const [editPassword, setEditPassword] = useState('');
     const [editConfirmPassword, setEditConfirmPassword] = useState('');
-    const [profileMessage, setProfileMessage] = useState({ text: '', type: '' });
+    const [profileMessage, setProfileMessage] = useState<ProfileMessage>({ text: '', type: '' });
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,8 +134,8 @@ export const Profile: React.FC = () => {
             const updatedProfile = await uploadAvatar(file);
             setProfile(updatedProfile);
             setProfileMessage({ text: 'Profile picture uploaded successfully!', type: 'success' });
-        } catch (err: any) {
-            setProfileMessage({ text: err.response?.data?.detail || 'Failed to upload profile picture.', type: 'error' });
+        } catch (error: unknown) {
+            setProfileMessage({ text: getErrorMessage(error, 'Failed to upload profile picture.'), type: 'error' });
         } finally {
             setIsUploadingAvatar(false);
             // reset file input
@@ -191,8 +196,8 @@ export const Profile: React.FC = () => {
             setEditPassword('');
             setEditConfirmPassword('');
             setProfileMessage({ text: 'Profile updated successfully.', type: 'success' });
-        } catch (err: any) {
-            setProfileMessage({ text: err.response?.data?.detail || 'Failed to update profile.', type: 'error' });
+        } catch (error: unknown) {
+            setProfileMessage({ text: getErrorMessage(error, 'Failed to update profile.'), type: 'error' });
         } finally {
             setIsEditingProfile(false);
         }
@@ -221,7 +226,7 @@ export const Profile: React.FC = () => {
         } catch (e) { console.error(e); } finally { setDeletingId(null); }
     };
 
-    const handleFiles = async (files: FileList | null) => {
+    const handleFiles = useCallback(async (files: FileList | null) => {
         if (!files?.length) return;
         const file = files[0];
         const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
@@ -237,16 +242,16 @@ export const Profile: React.FC = () => {
             setUploadStatus('success');
             setUploadMessage(`"${file.name}" uploaded and queued for vectorization!`);
             await fetchDocuments();
-        } catch (err: any) {
+        } catch (error: unknown) {
             setUploadStatus('error');
-            setUploadMessage('Upload failed. ' + (err.response?.data?.detail || err.message));
+            setUploadMessage('Upload failed. ' + getErrorMessage(error, 'Unable to upload document.'));
         } finally { setIsUploading(false); setIsDragging(false); }
-    };
+    }, [fetchDocuments]);
 
     const onDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
     const onDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); }, []);
-    const onDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }, []);
-    const onFileInput = (e: React.ChangeEvent<HTMLInputElement>) => handleFiles(e.target.files);
+    const onDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); void handleFiles(e.dataTransfer.files); }, [handleFiles]);
+    const onFileInput = (e: React.ChangeEvent<HTMLInputElement>) => { void handleFiles(e.target.files); };
 
     const formatDate = (iso: string) =>
         iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
