@@ -7,10 +7,10 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
-[![vibe-particles](https://img.shields.io/npm/v/vibe-particles?color=cb3837&label=npm&logo=npm)](https://www.npmjs.com/package/vibe-particles)
-[![agentic-router](https://img.shields.io/pypi/v/agentic-router?color=blue&label=PyPI&logo=pypi)](https://pypi.org/project/agentic-router/)
-[![narrative-chunker](https://img.shields.io/pypi/v/narrative-chunker?color=blue&label=PyPI&logo=pypi)](https://pypi.org/project/narrative-chunker/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com)
+[![vibe-particles](https://img.shields.io/npm/v/vibe-particles?color=cb3837&label=vibe-particles&logo=npm)](https://www.npmjs.com/package/vibe-particles)
+[![agentic-router](https://img.shields.io/pypi/v/agentic-router?color=blue&label=agentic-router&logo=pypi)](https://pypi.org/project/agentic-router/)
+[![narrative-chunker](https://img.shields.io/pypi/v/narrative-chunker?color=blue&label=narrative-chunker&logo=pypi)](https://pypi.org/project/narrative-chunker/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com)
 
 > *"Find me a scene with a melancholic, rainy-day vibe."*
 
