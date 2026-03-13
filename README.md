@@ -2,7 +2,7 @@
 
 # 🎧 Moodbound
 
-**An AI-powered reading companion that understands the *mood* of your novels.**
+**An AI-powered reading companion that understands the mood of your novels.**
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -10,129 +10,165 @@
 [![vibe-particles](https://img.shields.io/npm/v/vibe-particles?color=cb3837&label=npm&logo=npm)](https://www.npmjs.com/package/vibe-particles)
 [![agentic-router](https://img.shields.io/pypi/v/agentic-router?color=blue&label=PyPI&logo=pypi)](https://pypi.org/project/agentic-router/)
 [![narrative-chunker](https://img.shields.io/pypi/v/narrative-chunker?color=blue&label=PyPI&logo=pypi)](https://pypi.org/project/narrative-chunker/)
-[![Gemini](https://img.shields.io/badge/Gemini-API-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev)
-[![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?style=flat&logo=openai&logoColor=white)](https://platform.openai.com)
-[![DeepSeek](https://img.shields.io/badge/DeepSeek-API-4D6BFE?style=flat&logo=deepseek&logoColor=white)](https://deepseek.com)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com)
 
-> *"Find me a scene with a melancholic, rainy-day vibe."* — this app actually answers that.
+> *"Find me a scene with a melancholic, rainy-day vibe."*
 
 </div>
 
 ---
 
-## 🎯 What is this?
+## What Is This?
 
-Moodbound is a full-stack AI application that goes far beyond a traditional search engine. Instead of matching keywords, it understands the **semantic meaning, mood, and emotional context** of your novel collection using vector embeddings and Retrieval-Augmented Generation (RAG).
+Moodbound is a full-stack AI app for a private novel library. It supports authenticated uploads, asynchronous ingestion, hybrid semantic search, and a document-level character graph built from extracted relationship triplets.
 
-**🎉 Phase 1-5 MVP Complete:** The core ingestion, hybrid search, and interactive UI pipelines are fully operational.
-
-Upload a novel. Ask about a vibe. Get back the exact scene, excerpt, and AI-synthesized explanation — with source attribution.
+The core app is working end to end. It is not fully production-hardened yet, and this README reflects the current checked-in state rather than the aspirational roadmap.
 
 ---
 
-## ✅ Features
+## Current State
 
-| Feature | Status | Description |
+| Area | Status | Notes |
 |---|---|---|
-| 📤 **Document Upload** | ✅ Complete | Drag-and-drop upload for PDF, EPUB, and TXT |
-| 🧠 **Vibe Search** | ✅ Complete | Semantic RAG search powered by Gemini / OpenAI |
-| 🔄 **Async Ingestion Pipeline** | ✅ Complete | Background ARQ workers handle heavy embedding work |
-| ✂️ **Narrative Chunking** | ✅ Complete | Splits text by paragraph/scene boundaries, not blind tokens |
-| 🗂️ **AI Auto-Categorization** | ✅ Complete | LLM classifies genre automatically on ingest |
-| 👤 **User Profiles & Auth** | ✅ Complete | JWT login, custom avatars, and secure password hashing |
-| 📚 **Library Management** | ✅ Complete | View/delete books with real-time processing status |
-| 🔌 **Decoupled AI Providers** | ✅ Complete | Mix/match LLMs and Embeddings (`deepseek` + `gemini`) |
-| 🌐 **Knowledge Graph** | ✅ Complete | Neo4j character relationship graph with d3-force clustering |
-| ♻️ **Cascading DB Deletes** | ✅ Complete | Deleting a novel cleans Postgres, Qdrant, and Neo4j |
-| 🎨 **Vibe-Reactive UI** | ✅ Complete | Theme and particle physics shift to match the mood of search results |
-| 🔍 **Hybrid Search (RRF)** | ✅ Complete | Combine dense vectors + BM25 sparse search |
+| 📤 **Document Upload** | Shipped | Drag-and-drop upload for PDF, EPUB, and TXT |
+| 🧠 **Vibe Search** | Shipped | Hybrid semantic search with synthesized answers and source excerpts |
+| 🔄 **Async Ingestion Pipeline** | Shipped | FastAPI hands work to Redis + ARQ workers |
+| ✂️ **Narrative Chunking** | Shipped | Uses `narrative-chunker` with semantic splitting and sentence fallback |
+| 🗂️ **AI Auto-Categorization** | Shipped | Genre classification runs during ingestion |
+| 👤 **Auth & Profiles** | Shipped, hardening pending | JWT auth, profile editing, local avatar uploads |
+| 📚 **Library Management** | Partial | Listing and status polling work; delete does not yet purge Qdrant vectors |
+| 🌐 **Knowledge Graph** | Beta | Neo4j-backed extraction, graph view, and graph-routed answers are wired up |
+| 🔌 **Decoupled AI Providers** | Shipped | Provider/model strings can split embeddings and LLM generation |
+| 🎨 **Vibe-Reactive UI** | Shipped | Search results drive color theme and particle preset changes |
+| 🔍 **Hybrid Search (RRF)** | Shipped | Qdrant hybrid retrieval with dense + sparse search |
+| 📦 **Package Extraction** | Shipped | `vibe-particles`, `agentic-router`, and `narrative-chunker` are separate packages |
+
+### Known Gaps
+
+- Deleting a document currently removes the file, SQL row, and Neo4j graph data, but not its Qdrant vectors yet.
+- Graph-routed relationship queries still need tenant-isolation hardening.
+- The frontend currently builds successfully, but `npm run lint` is not clean yet.
 
 ---
 
-## 🏛️ Architecture
+## Architecture
 
 ```mermaid
 graph TD
-    User["User"] -->|Upload novel| FE["React Frontend\nVite + Tailwind"]
-    User -->|Mood query| FE
-    FE -->|POST /api/documents| API["FastAPI Backend"]
+    User["User"] -->|Register / login| FE["React Frontend"]
+    User -->|Upload novel| FE
+    User -->|Ask vibe / lore question| FE
+
+    FE -->|POST /api/auth/*| API["FastAPI API"]
+    FE -->|POST /api/documents| API
     FE -->|POST /api/search| API
-    API -->|Save file + DB record| PG[("PostgreSQL\nDocuments + Status")]
-    API -->|Enqueue job| Redis[("Redis Queue")]
+    FE -->|GET /api/graph/:documentId| API
+
+    API -->|Users + document metadata| PG[("PostgreSQL")]
+    API -->|Queue ingestion job| Redis[("Redis")]
     Redis -->|Dequeue| Worker["ARQ Worker"]
-    Worker -->|Parse + Chunk| Worker
-    Worker -->|Generate embeddings| LLM["Gemini / OpenAI"]
-    LLM -->|Vectors| Qdrant[("Qdrant\nVector DB")]
-    Worker -->|Classify genre| LLM
-    Worker -->|Update status + genre| PG
-    API -->|Vector similarity search| Qdrant
-    API -->|LLM synthesis| LLM
-    LLM -->|Synthesized answer| FE
-    Worker -.->|NER triplets, planned| Neo4j[("Neo4j\nGraph DB")]
+
+    Worker -->|Parse + chunk| Chunker["narrative-chunker"]
+    Worker -->|Dense + sparse indexing| Qdrant[("Qdrant")]
+    Worker -->|Genre + NER extraction| LLM["Gemini / OpenAI / DeepSeek"]
+    Worker -->|Relationship triplets| Neo4j[("Neo4j")]
+    Worker -->|Status updates| PG
+
+    API -->|Agentic route: Vector or Graph| Router["agentic-router"]
+    Router --> Qdrant
+    Router --> Neo4j
+    API -->|Synthesized answer| FE
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## Extracted Packages
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Frontend** | React 19 + Vite + TypeScript | SPA with glassmorphic UI |
-| **Styling** | Tailwind CSS | Dynamic, vibe-reactive styling |
-| **Visual Effects** | [`vibe-particles` NPM](https://www.npmjs.com/package/vibe-particles) | Extracted, standalone WebGL autonomous particle physics engine |
-| **Backend** | Python + FastAPI | REST API & orchestration |
-| **AI Orchestration** | [`agentic-router` PyPI](https://pypi.org/project/agentic-router/) | Fast, rules-based LLM query routing and custom zero-shot classification |
-| **Text Processing** | [`narrative-chunker` PyPI](https://pypi.org/project/narrative-chunker/) | Semantic document orchestrator for LLM vector boundary chunking |
-| **Core RAG Framework**| LlamaIndex | RAG pipeline, query engine |
-| **LLM / Embeddings** | DeepSeek / OpenAI / Gemini | Synthesis, embeddings, NER extraction |
-| **Vector DB** | Qdrant | Semantic similarity search |
-| **Graph DB** | Neo4j | Character relationship storage (planned) |
-| **SQL DB** | PostgreSQL | Document metadata & status |
-| **Task Queue** | Redis + ARQ | Async background workers |
-| **Infrastructure** | Docker Compose | One-command dev environment |
+This app now depends on three extracted packages:
+
+- `vibe-particles` (npm): the background particle engine used by the frontend
+- `agentic-router` (PyPI): zero-shot routing and classification helpers
+- `narrative-chunker` (PyPI): document parsing and metadata-aware chunk orchestration
 
 ---
 
-## 🚀 Getting Started
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Frontend** | React 19 + Vite + TypeScript | SPA UI |
+| **Styling** | Tailwind CSS | Glassmorphic, vibe-reactive styling |
+| **Visual Effects** | [`vibe-particles`](https://www.npmjs.com/package/vibe-particles) | Canvas 2D particle engine |
+| **Graph UI** | `react-force-graph-2d` | Canvas graph rendering for character relationships |
+| **Backend** | Python + FastAPI | REST API and orchestration |
+| **AI Orchestration** | [`agentic-router`](https://pypi.org/project/agentic-router/) | Route selection and zero-shot classification |
+| **Text Processing** | [`narrative-chunker`](https://pypi.org/project/narrative-chunker/) | File parsing and chunk orchestration |
+| **Core RAG Framework** | LlamaIndex | Query engine and vector-store integration |
+| **LLM / Embeddings** | Gemini / OpenAI / DeepSeek | Embeddings, synthesis, classification, NER |
+| **Vector DB** | Qdrant | Hybrid retrieval |
+| **Graph DB** | Neo4j | Character relationship storage and graph answers |
+| **SQL DB** | PostgreSQL | Users, documents, status, profile data |
+| **Task Queue** | Redis + ARQ | Background ingestion jobs |
+| **Infrastructure** | Docker Compose | Local dev services |
+
+---
+
+## Getting Started
 
 ### Prerequisites
-- Docker & Docker Compose
+
+- Docker Desktop / Docker Compose
 - Python 3.11+
 - Node.js 20+
-- A [DeepSeek API key](https://platform.deepseek.com/api_keys), [OpenAI API key](https://platform.openai.com/api-keys), or [Google AI API key](https://ai.google.dev)
+- Provider API keys for the models you plan to use
 
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/your-username/moodbound.git
-cd moodbound
+git clone <your-repo-url> light-vibe-novels
+cd light-vibe-novels
 cp .env.example .env
-# Edit .env and add your API key
 ```
 
-### 2. Start the database stack
+### 2. Start infrastructure
 
 ```bash
 docker compose up -d
 ```
 
-### 3. Start the backend
+### 3. Quick start on Windows
+
+The repo includes PowerShell launchers that start Docker, prompt for provider keys, and open terminals for the frontend, API, and worker:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1
+```
+
+Note: the current scripts prompt for `GOOGLE_API_KEY`, `OPENAI_API_KEY`, and `DEEPSEEK_API_KEY` before launch.
+
+### 4. Manual backend startup
 
 ```bash
 cd backend
 pip install -r requirements.txt
-python -m fastembed download # Pre-download BM25 sparse weights
+python -m fastembed download
 ```
 
-# Terminal 1: API server
-python -m uvicorn app.main:app --reload
+Then run the API and worker in separate terminals:
 
-# Terminal 2: Background worker
+```bash
+# terminal 1
+cd backend
+python -m uvicorn app.main:app --reload
+```
+
+```bash
+# terminal 2
+cd backend
 python -m arq app.worker.WorkerSettings
 ```
 
-### 4. Start the frontend
+### 5. Manual frontend startup
 
 ```bash
 cd frontend
@@ -140,116 +176,80 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) 🎉
+Open [http://localhost:5173](http://localhost:5173).
 
-### 5. Test the API (Optional)
-You can directly test the Hybrid Hybrid RRF search endpoint from your terminal:
+### 6. Smoke test
+
+Unauthenticated health check:
+
 ```bash
-curl -X POST http://localhost:8000/api/search/ \
-  -H "Content-Type: application/json" \
-  -d '{"query": "A melancholic rainy day"}'
+curl http://localhost:8000/api/system/status
+```
+
+Authenticated routes such as `/api/search/`, `/api/documents/`, `/api/graph/{document_id}`, and `/api/auth/me` require a bearer token.
+
+---
+
+## Configuration
+
+The root `.env.example` contains the current local-development shape:
+
+- `AI_PROVIDER`: global fallback provider
+- `EMBEDDING_MODEL`: optional `provider/model` override for embeddings
+- `FAST_LLM_MODEL`: optional `provider/model` override for LLM generation
+- `GOOGLE_API_KEY`
+- `OPENAI_API_KEY`
+- `DEEPSEEK_API_KEY`
+- `POSTGRES_*`, `NEO4J_*`
+
+For non-local environments, set a real `JWT_SECRET_KEY` explicitly instead of relying on the development fallback in code.
+
+Example provider split:
+
+```env
+AI_PROVIDER=gemini
+EMBEDDING_MODEL=openai/text-embedding-3-small
+FAST_LLM_MODEL=deepseek/deepseek-chat
 ```
 
 ---
 
-## ⚙️ Configuration (`.env`)
-
-Duplicate the `.env.example` file to create your local `.env` variable map.
-
-```bash
-cp .env.example .env
-```
-
-By decoupling the AI syntax via the config template, developers can mix and match providers natively — pairing DeepSeek's incredibly low-cost, high-speed API for generation with OpenAI/Gemini's highly granular embedding models.
-
----
-
-## 🔬 Engineering Highlights
+## Engineering Notes
 
 ### Narrative Chunking
-Most RAG systems split text at fixed token counts, which breaks mid-sentence and destroys context. This system chunks by **paragraph and scene boundaries**, preserving the semantic coherence of each passage before embedding it.
 
-### Agentic LLM Router
-Queries are intercepted by a router prompt before retrieval. The LLM decides whether to consult the **Vector DB** (vibe/mood searches) or the **Graph DB** (character relationship queries). This is the foundation for true GraphRAG.
+The ingestion pipeline prefers LlamaIndex's `SemanticSplitterNodeParser` and falls back to `SentenceSplitter` if semantic pre-processing fails. `narrative-chunker` handles file loading and metadata injection onto the produced nodes.
 
-### AI Auto-Categorization
-After every document is ingested and vectorized, the LLM reads the first chunk and classifies the genre using a constrained prompt — zero user effort, near-zero token cost.
+### Agentic Routing
 
-### Decoupled AI Architecture
-RAG models historically tie embeddings and synthesis to the same provider. We decoupled this: you can explicitly define `provider/model` mappings in your `.env`. This allows us to use **DeepSeek V3** exclusively for narrative intelligence and NER relationship generation (which requires heavy token output for cheap), while using **OpenAI embeddings** for precision Qdrant indexing.
+Search requests are routed between the vector path and the graph path using `agentic-router`. The same package is also used for vibe classification and genre classification prompts.
 
-### Hybrid Search (Reciprocal Rank Fusion)
-To solve the hallucination problem inherent in dense vector "vibe matching", Moodbound natively blends **BM25 Sparse Keyword** searches alongside its Qdrant dense embeddings. When a novel is ingested, both indices are built in parallel using `fastembed`. During retrieval, LlamaIndex mathematically merges both results with an `alpha=0.5` weighting, guaranteeing that exact-character nouns bubble to the absolute top of the results while preserving semantic meaning.
+### Hybrid Search
 
-### Canvas WebGL Knowledge Graph
-Extracting the Neo4j relationships is only half the battle. Visualizing 500+ nodes in the DOM natively crashes Chrome. We bypassed the DOM entirely and migrated the `/graph/:documentId` UI to a pure **HTML5 Canvas WebGL** engine using `react-force-graph-2d`. We intercept the draw loop to natively render Obsidian-style glowing character connections while pushing all `d3-force` layout physics to a background Web Worker to preserve a locked 60 FPS UI thread.
+The vector path uses Qdrant hybrid retrieval through LlamaIndex with `vector_store_query_mode="hybrid"` and `alpha=0.5`. The current implementation also applies a `user_id` metadata filter on the vector search path.
 
-```mermaid
-graph LR
-    A[FastAPI Engine] --> B{AI Router}
-    B -->|Settings.embed_model| C[Gemini / OpenAI]
-    C -->|Float Vectors| D[(Qdrant DB)]
-    B -->|Settings.llm| E[DeepSeek V3]
-    E -->|Text & JSON| F[RAG Synthesis / NER]
-```
+### Relationship Extraction
 
-### Concurrent Batched NER Extraction
-Extracting a Neo4j knowledge graph from a 150,000-word novel in one shot would fail every LLM's context window. Instead, Moodbound slices the novel into overlapping sequential blocks, dispatches 10 parallel asynchronous routines with `asyncio.gather()`, and concurrently extracts relationships to dramatically reduce wait times from hours to roughly 35 seconds.
+During ingestion, the worker samples chunks across the document, batches them, and runs bounded concurrent extraction calls before writing relationship triplets into Neo4j.
 
-```mermaid
-graph TD
-    A["150k Word Novel"] -->|"SentenceSplitter"| B["100+ Overlapping Chunks"]
-    B --> C{"asyncio.gather"}
-    C -->|"Batch 1"| D["DeepSeek API"]
-    C -->|"Batch 2"| E["DeepSeek API"]
-    C -->|"Batch n..."| F["DeepSeek API"]
-    D --> G[("Neo4j Entities")]
-    E --> G
-    F --> G
-```
+### Graph Visualization
 
-### Async Ingestion Pipeline
-File upload returns instantly. Heavy work (PDF parsing, LLM embedding calls, batched graph extraction) is dispatched to Redis-backed ARQ workers. The frontend polls for status updates every 5 seconds, showing live `Loading → Parsing → Classifying → Extracting → Completed` UI transitions.
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant FA as FastAPI
-    participant R as Redis
-    participant W as ARQ Worker
-
-    U->>FA: Upload Novel (PDF/EPUB)
-    FA->>R: Enqueue job_id
-    FA-->>U: Return 200 OK (Pending)
-
-    W->>R: Dequeue job
-    W->>W: Parse Text
-    W->>W: Generate Embeddings (Qdrant)
-    W->>W: Batched NER Extraction (Neo4j)
-
-    loop Every 5 Seconds
-        U->>FA: Poll Status
-        FA-->>U: Processing status & genre
-    end
-    W->>FA: Mark DB Completed
-```
+The graph page uses `react-force-graph-2d` with custom Canvas drawing for nodes and links. It polls for updates every 5 seconds while the document is still being processed.
 
 ---
 
-## 🗺️ Roadmap (Path to Production)
+## Roadmap
 
-With the MVP complete, development is now focused on enterprise readiness and platform extraction:
-
-- [x] **Hybrid Search (Reciprocal Rank Fusion)** — combined dense + sparse BM25 retrieval
-- [x] **Vibe-Reactive UI** — color palette and particle physics shift to match the emotional tone of results
-- [x] **Extract Visual Engine** — Open-sourced the `vibe-particles` canvas engine to npm ([vibe-particles](https://www.npmjs.com/package/vibe-particles))
-- [x] **Phase 6: Multi-Tenancy & Security** — JWT Auth, user-isolated profiles, local avatar uploads, and UI consolidation
-- [ ] **Phase 7: Platform Extraction** — Factor out complex backend logic (Agentic Router, Chunker) into reusable pip packages
-- [ ] **Phase 8: Performance UX** — Semantic Redis Cache for repeat queries, streaming SSE text responses
-- [ ] **Phase 9: Retrieval & LLMOps** — Integrate Langfuse for observability, query rewriting (HyDE), and cross-encoder reranking
+- Done: hybrid dense + sparse retrieval
+- Done: vibe-reactive UI and extracted `vibe-particles` engine
+- Done: extracted `agentic-router` and `narrative-chunker` packages
+- In progress: multi-tenancy and security hardening
+- Next: Qdrant cleanup on document delete
+- Next: semantic caching and streaming responses
+- Next: observability, query rewriting, and reranking
 
 ---
 
-## 📄 License
+## License
 
-MIT — use freely, attribution appreciated.
+MIT
