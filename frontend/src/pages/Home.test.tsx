@@ -84,4 +84,50 @@ describe('Home', () => {
       expect(screen.getByText(/search failed\./i)).toBeInTheDocument();
     });
   });
+
+  it('renders graph-backed results and unmatched graph lines', async () => {
+    const user = userEvent.setup();
+    searchVibesMock.mockResolvedValue({
+      answer: 'Zagan purchased Nephy.',
+      vibe: 'Neutral',
+      engine: 'neo4j-graph',
+      sources: [
+        {
+          filename: 'Neo4j Knowledge Graph',
+          score: 1,
+          text: 'Graph Cypher Extraction:\nZagan -[PURCHASED]-> Nephy\nUnparsed line',
+        },
+      ],
+    });
+
+    render(<Home />);
+
+    await user.click(screen.getByRole('button', { name: /trigger search/i }));
+
+    expect(await screen.findByText(/knowledge graph subgraph/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/knowledge graph/i)).toBeInTheDocument();
+    expect(screen.getByText(/unparsed line/i)).toBeInTheDocument();
+  });
+
+  it('renders the no-results state for empty responses', async () => {
+    const user = userEvent.setup();
+    searchVibesMock.mockResolvedValue({
+      answer: 'Empty Response',
+      engine: 'other',
+      sources: [],
+    });
+    getSystemStatusMock.mockResolvedValue({
+      status: 'Offline',
+      agent_router: 'Gemini',
+      vector_db: 'Qdrant',
+    });
+
+    render(<Home />);
+
+    await user.click(screen.getByRole('button', { name: /trigger search/i }));
+
+    expect(await screen.findByText(/no matching passages found/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/ai result/i)).toBeInTheDocument();
+    expect(screen.getByText(/offline/i)).toBeInTheDocument();
+  });
 });

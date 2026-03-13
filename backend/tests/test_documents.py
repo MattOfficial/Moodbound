@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
@@ -93,6 +94,69 @@ def test_upload_document_marks_document_failed_when_queue_dispatch_fails(
     assert "background processing could not be queued" in exc_info.value.detail
 
 
+def test_upload_document_rejects_unsupported_file_type(
+    fake_db_session,
+    fake_user,
+):
+    with pytest.raises(HTTPException) as exc_info:
+        asyncio.run(
+            documents_api.upload_document(
+                file=make_upload_file(filename="notes.docx"),
+                genre="Fantasy",
+                db=fake_db_session,
+                current_user=fake_user,
+            )
+        )
+
+    assert exc_info.value.status_code == 400
+    assert "Unsupported file format" in exc_info.value.detail
+
+
+def test_list_documents_scopes_to_current_user_and_defaults_genre(
+    fake_db_session,
+    fake_user,
+):
+    other_user_id = uuid.uuid4()
+    older_doc = Document(
+        id=uuid.uuid4(),
+        user_id=fake_user.id,
+        filename="older.pdf",
+        content_type="application/pdf",
+        file_path="uploads/older.pdf",
+        status="Completed",
+        genre=None,
+    )
+    newer_doc = Document(
+        id=uuid.uuid4(),
+        user_id=fake_user.id,
+        filename="newer.pdf",
+        content_type="application/pdf",
+        file_path="uploads/newer.pdf",
+        status="Pending",
+        genre="Fantasy",
+    )
+    other_doc = Document(
+        id=uuid.uuid4(),
+        user_id=other_user_id,
+        filename="other.pdf",
+        content_type="application/pdf",
+        file_path="uploads/other.pdf",
+        status="Completed",
+        genre="Sci-Fi",
+    )
+
+    fake_db_session.add(older_doc)
+    fake_db_session.add(newer_doc)
+    fake_db_session.add(other_doc)
+    older_doc.created_at = older_doc.created_at - timedelta(days=1)
+
+    response = documents_api.list_documents(db=fake_db_session, current_user=fake_user)
+
+    assert [doc["filename"] for doc in response] == ["newer.pdf", "older.pdf"]
+    assert response[0]["genre"] == "Fantasy"
+    assert response[1]["genre"] == "Uncategorized"
+
+
 def test_delete_document_removes_external_data_before_deleting_db_row(
     monkeypatch,
     tmp_path,
@@ -141,3 +205,27 @@ def test_delete_document_removes_external_data_before_deleting_db_row(
     assert not file_path.exists()
     assert document.id not in fake_db_session.documents
     assert fake_db_session.operations[-2:] == ["delete", "commit"]
+
+
+def test_delete_document_rejects_invalid_uuid(fake_db_session, fake_user):
+    with pytest.raises(HTTPException) as exc_info:
+        documents_api.delete_document(
+            document_id="not-a-uuid",
+            db=fake_db_session,
+            current_user=fake_user,
+        )
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Invalid document ID format."
+
+
+def test_delete_document_returns_not_found_for_missing_record(fake_db_session, fake_user):
+    with pytest.raises(HTTPException) as exc_info:
+        documents_api.delete_document(
+            document_id=str(uuid.uuid4()),
+            db=fake_db_session,
+            current_user=fake_user,
+        )
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Document not found."

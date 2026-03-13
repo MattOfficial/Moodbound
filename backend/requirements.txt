@@ -4,6 +4,7 @@ sqlalchemy
 alembic
 psycopg2-binary
 pytest
+pytest-cov
 python-multipart
 python-dotenv
 python-jose[cryptography]

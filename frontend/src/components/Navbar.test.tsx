@@ -43,4 +43,24 @@ describe('Navbar', () => {
 
     expect(logoutMock).toHaveBeenCalledTimes(1);
   });
+
+  it('uses the uploaded profile picture when available', () => {
+    useAuthMock.mockReturnValue({
+      logout: logoutMock,
+      profile: {
+        id: 'user-1',
+        email: 'reader@example.com',
+        nickname: 'Reader',
+        profile_picture_url: 'https://cdn.example.com/avatar.png',
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByAltText(/profile/i)).toHaveAttribute('src', 'https://cdn.example.com/avatar.png');
+  });
 });

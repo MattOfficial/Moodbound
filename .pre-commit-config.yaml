@@ -20,3 +20,27 @@ repos:
         language: pygrep
         types: [text]
         exclude: ^(\.env\.example|README\.md)$
+    -   id: frontend-coverage
+        name: Frontend Coverage Gate
+        entry: npm --prefix frontend run test:coverage
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+    -   id: frontend-verify
+        name: Frontend Verify Gate
+        entry: npm --prefix frontend run verify
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+    -   id: backend-coverage
+        name: Backend Coverage Gate
+        entry: pwsh -File scripts/test-backend-coverage.ps1
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+    -   id: backend-verify
+        name: Backend Verify Gate
+        entry: pwsh -File scripts/test-backend-coverage.ps1
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

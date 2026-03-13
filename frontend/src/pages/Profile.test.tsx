@@ -154,4 +154,98 @@ describe('Profile', () => {
     expect(setProfileMock).toHaveBeenCalledWith(updatedProfile);
     expect(await screen.findByText(/profile updated successfully/i)).toBeInTheDocument();
   });
+
+  it('uploads a valid document and shows the success toast', async () => {
+    const { container } = renderProfile();
+    uploadDocumentMock.mockResolvedValue({ document_id: 'doc-2' });
+    getDocumentsMock
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'doc-2',
+          filename: 'new-story.pdf',
+          status: 'Pending',
+          genre: 'Fantasy',
+          created_at: '2026-03-13T00:00:00Z',
+        },
+      ]);
+
+    await screen.findByText(/your library/i);
+
+    const fileInput = container.querySelector<HTMLInputElement>('#file-upload');
+    expect(fileInput).not.toBeNull();
+
+    fireEvent.change(fileInput!, {
+      target: {
+        files: [new File(['draft'], 'new-story.pdf', { type: 'application/pdf' })],
+      },
+    });
+
+    await waitFor(() => {
+      expect(uploadDocumentMock).toHaveBeenCalledTimes(1);
+    });
+    expect(await screen.findByText(/uploaded and queued for vectorization/i)).toBeInTheDocument();
+  });
+
+  it('uploads an avatar and updates the auth profile state', async () => {
+    const updatedProfile = {
+      ...baseProfile,
+      profile_picture_url: 'https://cdn.example.com/avatar.png',
+    };
+    uploadAvatarMock.mockResolvedValue(updatedProfile);
+    const { container } = renderProfile({ pathname: '/profile', state: { activeTab: 'settings' } });
+
+    await screen.findByText(/profile settings/i);
+
+    const avatarInput = container.querySelector<HTMLInputElement>('#avatar-upload');
+    expect(avatarInput).not.toBeNull();
+
+    fireEvent.change(avatarInput!, {
+      target: {
+        files: [new File(['img'], 'avatar.png', { type: 'image/png' })],
+      },
+    });
+
+    await waitFor(() => {
+      expect(uploadAvatarMock).toHaveBeenCalledTimes(1);
+    });
+    expect(setProfileMock).toHaveBeenCalledWith(updatedProfile);
+    expect(await screen.findByText(/profile picture uploaded successfully/i)).toBeInTheDocument();
+  });
+
+  it('shows an upload failure toast when document upload fails', async () => {
+    const { container } = renderProfile();
+    uploadDocumentMock.mockRejectedValue(new Error('upload failed'));
+
+    await screen.findByText(/your library/i);
+
+    const fileInput = container.querySelector<HTMLInputElement>('#file-upload');
+    expect(fileInput).not.toBeNull();
+
+    fireEvent.change(fileInput!, {
+      target: {
+        files: [new File(['draft'], 'broken.pdf', { type: 'application/pdf' })],
+      },
+    });
+
+    expect(await screen.findByText(/upload failed\./i)).toBeInTheDocument();
+  });
+
+  it('shows an avatar error when profile picture upload fails', async () => {
+    uploadAvatarMock.mockRejectedValue(new Error('avatar broke'));
+    const { container } = renderProfile({ pathname: '/profile', state: { activeTab: 'settings' } });
+
+    await screen.findByText(/profile settings/i);
+
+    const avatarInput = container.querySelector<HTMLInputElement>('#avatar-upload');
+    expect(avatarInput).not.toBeNull();
+
+    fireEvent.change(avatarInput!, {
+      target: {
+        files: [new File(['img'], 'avatar.png', { type: 'image/png' })],
+      },
+    });
+
+    expect(await screen.findByText(/failed to upload profile picture/i)).toBeInTheDocument();
+  });
 });

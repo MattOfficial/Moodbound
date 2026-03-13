@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import uuid
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -25,7 +26,7 @@ class FakeQuery:
         return self
 
     def all(self):
-        records = self._records()
+        records = [record for record in self._records() if self._matches(record)]
         return sorted(records, key=lambda record: record.created_at, reverse=True)
 
     def first(self):
@@ -60,6 +61,10 @@ class FakeSession:
 
     def add(self, instance):
         self.operations.append("add")
+        if getattr(instance, "id", None) is None:
+            instance.id = uuid.uuid4()
+        if getattr(instance, "created_at", None) is None:
+            instance.created_at = datetime.utcnow()
         if isinstance(instance, models.Document):
             self.documents[instance.id] = instance
         elif isinstance(instance, models.User):

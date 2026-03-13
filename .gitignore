@@ -9,12 +9,14 @@ backend/uploads/
 # Python / FastAPI
 ########################################
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *.pyo
 *.pyd
 *.so
 *.egg-info/
 .eggs/
+.coverage
 .env
 .venv/
 venv/
