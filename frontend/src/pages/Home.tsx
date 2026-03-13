@@ -116,17 +116,21 @@ export const Home: React.FC = () => {
                 {result && !isLoading && (
                     <div className="mt-12 w-full max-w-4xl text-left animate-slideUp pb-24">
                         <div className="glass-card mb-8">
-                            <h2 className="text-sm font-bold tracking-widest text-[var(--text-muted)] uppercase mb-4 flex items-center gap-2">
-                                {result.engine === 'neo4j-graph' ? (
-                                    <Network size={16} className="transition-colors duration-1000" style={{ color: activeHex, filter: `drop-shadow(0 0 5px ${activeHex})` }} />
-                                ) : result.engine === 'qdrant-hybrid' ? (
-                                    <Sparkles size={16} className="transition-colors duration-1000" style={{ color: activeHex, filter: `drop-shadow(0 0 5px ${activeHex})` }} />
-                                ) : (
-                                    <span className="w-2 h-2 rounded-full transition-colors duration-1000" style={{ backgroundColor: activeHex, boxShadow: 'var(--vibe-shadow)' }} />
-                                )}
-                                {result.engine === 'neo4j-graph' ? 'Knowledge Graph Extraction' : result.engine === 'qdrant-hybrid' ? 'Semantic Synthesis' : 'AI Synthesis'}
-                                {currentVibe !== "Neutral" && <span className="text-xs px-2 py-0.5 rounded border ml-2 transition-colors duration-1000" style={{ borderColor: `color-mix(in srgb, ${activeHex} 50%, transparent)`, color: activeHex }}>Vibe: {currentVibe}</span>}
-                            </h2>
+                            <div className="mb-4 flex items-center">
+                                <span
+                                    className="inline-flex items-center justify-center"
+                                    title={result.engine === 'neo4j-graph' ? 'Knowledge Graph' : result.engine === 'qdrant-hybrid' ? 'Semantic Search' : 'AI Result'}
+                                    aria-label={result.engine === 'neo4j-graph' ? 'Knowledge Graph' : result.engine === 'qdrant-hybrid' ? 'Semantic Search' : 'AI Result'}
+                                >
+                                    {result.engine === 'neo4j-graph' ? (
+                                        <Network size={16} className="transition-colors duration-1000" style={{ color: activeHex, filter: `drop-shadow(0 0 5px ${activeHex})` }} />
+                                    ) : result.engine === 'qdrant-hybrid' ? (
+                                        <Sparkles size={16} className="transition-colors duration-1000" style={{ color: activeHex, filter: `drop-shadow(0 0 5px ${activeHex})` }} />
+                                    ) : (
+                                        <span className="w-2 h-2 rounded-full transition-colors duration-1000" style={{ backgroundColor: activeHex, boxShadow: 'var(--vibe-shadow)' }} />
+                                    )}
+                                </span>
+                            </div>
                             {result.answer && result.answer.trim() !== 'Empty Response' ? (
                                 <div className="prose prose-invert max-w-none text-lg leading-relaxed">
                                     {result.answer.split('\n').map((para, i) => (
