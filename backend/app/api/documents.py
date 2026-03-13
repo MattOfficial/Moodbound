@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from pathlib import PurePath
 import shutil
 import uuid
 from arq import create_pool
@@ -36,7 +37,8 @@ async def upload_document(
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
 
-    original_filename = Path(file.filename).name
+    normalized_filename = file.filename.replace("\\", "/")
+    original_filename = PurePath(normalized_filename).name
     if not original_filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
 
